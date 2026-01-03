@@ -1,6 +1,6 @@
 # 双版本部署指南
 
-本指南将帮助您将"共权预测网"和"亲友找乐子预测网"两个版本部署到不同的域名进行市场测试。
+本指南将帮助您将"共权预测网"部署到生产环境进行市场测试。
 
 ## 目录
 
@@ -73,72 +73,34 @@ npm run build
 
 7. 创建管理员账号（参考 SETUP.md）
 
-### 项目 2：亲友找乐子预测网
+### 项目 2：备用数据库（可选）
 
-重复上述步骤，但使用不同的项目名称：
-- **Name**: `qinyou-prediction`（亲友找乐子预测网）
+如需创建备用或测试数据库，重复上述步骤，使用不同的项目名称。
 
 ---
 
 ## 配置两个版本
 
-### 方案 A：使用 Git 分支（推荐）
+### 提交代码到 GitHub
 
 ```bash
-# 1. 提交当前的"共权预测网"版本
+# 1. 提交当前版本
 git add -A
 git commit -m "共权预测网 - 初始版本"
 
-# 2. 创建"亲友找乐子预测网"分支
-git checkout -b qinyou-version
-
-# 3. 修改品牌名称
-# 将以下文件中的"共权预测网"改为"亲友找乐子预测网"：
-# - src/components/Navbar.tsx
-# - src/pages/EventDetailPage.tsx
-# - README.md
-# - SETUP.md
-# - supabase/migrations/20260101064243_create_initial_schema.sql
-
-# 4. 提交更改
-git add -A
-git commit -m "亲友找乐子预测网 - 品牌修改"
-
-# 5. 回到主分支（共权预测网）
-git checkout master
-```
-
-### 方案 B：使用两个独立仓库
-
-```bash
-# 1. 为"共权预测网"创建仓库
-cd /path/to/gongquan-prediction
-git init
-git add -A
-git commit -m "共权预测网 - 初始版本"
-
-# 2. 复制项目文件夹
-cp -r /path/to/gongquan-prediction /path/to/qinyou-prediction
-
-# 3. 为"亲友找乐子预测网"创建仓库
-cd /path/to/qinyou-prediction
-git init
-# 修改品牌名称...
-git add -A
-git commit -m "亲友找乐子预测网 - 初始版本"
+# 2. 推送到 GitHub
+git push origin main
 ```
 
 ---
 
 ## 使用 Vercel 部署
 
-### 部署"共权预测网"
+### 部署到 Vercel
 
 1. 访问 [Vercel Dashboard](https://vercel.com/)
 2. 点击 "Add New..." > "Project"
-3. 导入 Git 仓库：
-   - 如果使用分支方案，选择主分支（master）
-   - 如果使用独立仓库，选择"共权预测网"仓库
+3. 导入 Git 仓库并选择主分支
 4. 配置项目：
    - **Project Name**: `gongquan-prediction`
    - **Framework Preset**: Vite
@@ -147,24 +109,17 @@ git commit -m "亲友找乐子预测网 - 初始版本"
    - **Output Directory**: `dist`
 5. 添加环境变量：
    ```
-   VITE_SUPABASE_URL=https://你的共权项目.supabase.co
-   VITE_SUPABASE_ANON_KEY=你的共权项目anon_key
+   VITE_SUPABASE_URL=https://你的项目.supabase.co
+   VITE_SUPABASE_ANON_KEY=你的项目anon_key
    VITE_PROJECT_NAME=共权预测网
    ```
 6. 点击 "Deploy"
-
-### 部署"亲友找乐子预测网"
-
-重复上述步骤，但使用：
-- **Project Name**: `qinyou-prediction`
-- **Branch**: `qinyou-version`（如果使用分支方案）
-- 不同的环境变量（使用"亲友找乐子"的 Supabase 配置）
 
 ---
 
 ## 使用 Netlify 部署
 
-### 部署"共权预测网"
+### 部署到 Netlify
 
 1. 访问 [Netlify Dashboard](https://app.netlify.com/)
 2. 点击 "Add new site" > "Import an existing project"
@@ -177,38 +132,24 @@ git commit -m "亲友找乐子预测网 - 初始版本"
    - 进入 Site settings > Environment variables
    - 添加：
      ```
-     VITE_SUPABASE_URL=https://你的共权项目.supabase.co
-     VITE_SUPABASE_ANON_KEY=你的共权项目anon_key
+     VITE_SUPABASE_URL=https://你的项目.supabase.co
+     VITE_SUPABASE_ANON_KEY=你的项目anon_key
      VITE_PROJECT_NAME=共权预测网
      ```
 7. 点击 "Deploy site"
-
-### 部署"亲友找乐子预测网"
-
-重复上述步骤，使用不同的分支和环境变量。
 
 ---
 
 ## 环境变量配置
 
-### 共权预测网
+### 本地开发环境
 
 创建 `.env` 文件：
 
 ```env
-VITE_SUPABASE_URL=https://你的共权项目.supabase.co
-VITE_SUPABASE_ANON_KEY=你的共权项目anon_key
+VITE_SUPABASE_URL=https://你的项目.supabase.co
+VITE_SUPABASE_ANON_KEY=你的项目anon_key
 VITE_PROJECT_NAME=共权预测网
-```
-
-### 亲友找乐子预测网
-
-创建 `.env` 文件：
-
-```env
-VITE_SUPABASE_URL=https://你的亲友项目.supabase.co
-VITE_SUPABASE_ANON_KEY=你的亲友项目anon_key
-VITE_PROJECT_NAME=亲友找乐子预测网
 ```
 
 ---
@@ -218,9 +159,7 @@ VITE_PROJECT_NAME=亲友找乐子预测网
 ### 使用 Vercel 自定义域名
 
 1. 在 Vercel 项目页面，进入 Settings > Domains
-2. 添加自定义域名：
-   - 共权预测网：`gongquan.yourdomain.com`
-   - 亲友找乐子：`qinyou.yourdomain.com`
+2. 添加自定义域名：`gongquan.yourdomain.com`
 3. 按照提示在您的域名提供商处添加 DNS 记录：
    ```
    类型: CNAME
@@ -240,7 +179,6 @@ VITE_PROJECT_NAME=亲友找乐子预测网
 
 ### 功能测试清单
 
-#### 共权预测网
 - [ ] 访问网站 URL，确认品牌名称显示正确
 - [ ] 测试用户注册
 - [ ] 测试用户登录
@@ -248,17 +186,6 @@ VITE_PROJECT_NAME=亲友找乐子预测网
 - [ ] 测试下注流程
 - [ ] 测试见证人确认
 - [ ] 测试管理员功能
-
-#### 亲友找乐子预测网
-- [ ] 重复上述所有测试
-
-### 数据隔离验证
-
-确保两个版本的数据完全独立：
-1. 在"共权预测网"创建测试账号
-2. 尝试用同样的邮箱在"亲友找乐子"登录（应该失败）
-3. 在两个平台分别创建测试事件
-4. 确认事件不会出现在另一个平台
 
 ### 性能测试
 

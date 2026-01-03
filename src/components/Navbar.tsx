@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 预
               </div>
               <span className="text-lg font-semibold text-gray-900">
-                亲友找乐子预测网
+                共权预测网
               </span>
             </div>
 

@@ -5,9 +5,8 @@
 ## 当前状态
 
 ✅ 项目已配置完成：
-- **master 分支**：共权预测网版本
-- **qinyou-version 分支**：亲友找乐子预测网版本
-- 两个分支都包含完整的部署配置文件
+- **main 分支**：共权预测网版本
+- 包含完整的部署配置文件
 
 ## 快速部署步骤
 
@@ -18,8 +17,7 @@
 
 # 2. 将本地代码推送到 GitHub
 git remote add origin https://github.com/你的用户名/prediction-market.git
-git push -u origin master
-git push origin qinyou-version
+git push -u origin main
 ```
 
 ### 第二步：创建 Supabase 项目
@@ -31,62 +29,36 @@ git push origin qinyou-version
 3. 复制 **Project URL** 和 **anon public key**
 4. 在 SQL Editor 中依次运行 `supabase/migrations/` 目录下的所有 SQL 文件
 
-#### 亲友找乐子预测网的数据库
+#### 备用数据库（可选）
 
-1. 再次创建新项目：`qinyou-prediction`
-2. 复制该项目的 **Project URL** 和 **anon public key**
-3. 同样运行所有迁移文件
+如需测试或备用环境，可重复上述步骤创建额外的数据库项目。
 
 ### 第三步：部署到 Vercel（推荐）
 
-#### 部署共权预测网
+#### 部署到 Vercel
 
 1. 访问 https://vercel.com/
 2. 点击 "Add New..." > "Project"
 3. 选择您的 GitHub 仓库
 4. 配置：
-   - **Branch**: `master`
+   - **Branch**: `main`
    - **Project Name**: `gongquan-prediction`
 5. 添加环境变量：
    ```
-   VITE_SUPABASE_URL=https://你的gongquan项目.supabase.co
-   VITE_SUPABASE_ANON_KEY=你的gongquan的anon_key
+   VITE_SUPABASE_URL=https://你的项目.supabase.co
+   VITE_SUPABASE_ANON_KEY=你的项目anon_key
    VITE_PROJECT_NAME=共权预测网
    ```
 6. 点击 "Deploy"
 
-#### 部署亲友找乐子预测网
-
-1. 再次点击 "Add New..." > "Project"
-2. 选择同一个 GitHub 仓库
-3. 配置：
-   - **Branch**: `qinyou-version`
-   - **Project Name**: `qinyou-prediction`
-4. 添加环境变量（使用 qinyou 项目的配置）
-5. 点击 "Deploy"
-
 ### 第四步：获取部署 URL
 
-部署完成后，您会得到两个 URL：
+部署完成后，您会得到部署 URL：
 - 共权预测网：`https://gongquan-prediction.vercel.app`
-- 亲友找乐子：`https://qinyou-prediction.vercel.app`
 
 ### 第五步：配置管理员账号
 
-为两个项目分别创建管理员账号（参考 SETUP.md 的步骤 3）。
-
-## 切换版本（本地开发）
-
-```bash
-# 查看所有分支
-git branch
-
-# 切换到共权预测网版本
-git checkout master
-
-# 切换到亲友找乐子版本
-git checkout qinyou-version
-```
+创建管理员账号（参考 SETUP.md 的步骤 3）。
 
 ## 更新部署
 
