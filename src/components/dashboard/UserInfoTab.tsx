@@ -58,7 +58,7 @@ export const UserInfoTab: React.FC = () => {
       updates.email = trimmedEmail;
     }
 
-    if ((profile.role === 'admin' || profile.role === 'witness') && referralCode !== profile.referral_code) {
+    if (profile.role === 'admin' && referralCode !== profile.referral_code) {
       updates.referralCode = referralCode;
     }
 
@@ -258,7 +258,7 @@ export const UserInfoTab: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               推荐码
             </label>
-            {editing && (profile.role === 'admin' || profile.role === 'witness') ? (
+            {editing && profile.role === 'admin' ? (
               <input
                 type="text"
                 value={referralCode}
