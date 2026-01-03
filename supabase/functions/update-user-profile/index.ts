@@ -71,6 +71,9 @@ Deno.serve(async (req: Request) => {
           autoRefreshToken: false,
           persistSession: false,
         },
+        db: {
+          schema: 'public',
+        },
       }
     );
 
@@ -124,21 +127,31 @@ Deno.serve(async (req: Request) => {
     }
 
     if (Object.keys(updates).length > 0) {
-      const { error: profileError } = await supabaseAdmin
+      console.log('Updating profile with admin client:', updates);
+      
+      const { data: updateData, error: profileError } = await supabaseAdmin
         .from('profiles')
         .update(updates)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (profileError) {
         console.error('Profile update error:', profileError);
         return new Response(
-          JSON.stringify({ error: '更新失败: ' + profileError.message }),
+          JSON.stringify({ 
+            error: '更新失败: ' + profileError.message,
+            details: profileError,
+            hint: profileError.hint,
+            code: profileError.code
+          }),
           {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       }
+      
+      console.log('Profile updated successfully:', updateData);
     }
 
     console.log('Update successful');
@@ -152,7 +165,10 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Edge function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error' }),
+      JSON.stringify({ 
+        error: error.message || 'Unknown error',
+        stack: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

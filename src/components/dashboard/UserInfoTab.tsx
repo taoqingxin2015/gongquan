@@ -96,8 +96,9 @@ export const UserInfoTab: React.FC = () => {
 
         if (!response.ok) {
           const errorMsg = result.error || `更新失败 (${response.status})`;
-          console.error('Update failed:', errorMsg);
-          setMessage(errorMsg);
+          const fullError = result.details ? `${errorMsg}\n详情: ${JSON.stringify(result.details)}` : errorMsg;
+          console.error('Update failed:', { errorMsg, details: result });
+          setMessage(fullError);
           setLoading(false);
           return;
         }
@@ -132,12 +133,18 @@ export const UserInfoTab: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
+      if (!session?.access_token) {
+        setMessage('登录已过期，请重新登录');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user-profile`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             'Content-Type': 'application/json',
           },
@@ -148,7 +155,9 @@ export const UserInfoTab: React.FC = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        setMessage(result.error || '修改失败');
+        const errorMsg = result.error || '修改失败';
+        const fullError = result.details ? `${errorMsg}\n详情: ${JSON.stringify(result.details)}` : errorMsg;
+        setMessage(fullError);
       } else {
         setMessage('密码修改成功');
         setNewPassword('');
