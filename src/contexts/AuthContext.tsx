@@ -141,11 +141,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (signUpError) return { error: signUpError };
       if (!authData.user) return { error: new Error('注册失败') };
 
-      const referralCode = data.role === 'witness'
+      const finalRole = isFirstUser ? 'admin' : data.role;
+
+      const referralCode = (data.role === 'witness' || isFirstUser)
         ? `W${Date.now().toString(36).toUpperCase()}`
         : null;
-
-      const finalRole = isFirstUser ? 'admin' : data.role;
 
       const { error: profileError } = await supabase
         .from('profiles')

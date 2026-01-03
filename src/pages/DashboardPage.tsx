@@ -42,6 +42,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
           { id: 'info', label: '用户信息' },
           { id: 'players', label: '玩家列表' },
           { id: 'confirmations', label: '待确认投注' },
+          { id: 'pending-witnesses', label: '待确认下一级见证人' },
           { id: 'witnesses', label: '见证人列表' },
           { id: 'events', label: '事件管理' },
         ];
