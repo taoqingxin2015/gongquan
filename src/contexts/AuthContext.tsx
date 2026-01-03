@@ -109,24 +109,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (data: SignUpData) => {
     try {
-      const { count } = await supabase
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('id, referral_code')
+        .eq('referral_code', data.referralCode)
+        .maybeSingle();
 
-      const isFirstUser = count === 0;
-      let referredById: string | null = null;
-
-      if (!isFirstUser) {
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id, referral_code')
-          .eq('referral_code', data.referralCode)
-          .maybeSingle();
-
-        if (!existingProfile) {
-          return { error: new Error('推荐码不存在') };
-        }
-        referredById = existingProfile.id;
+      if (!existingProfile) {
+        return { error: new Error('推荐码不存在') };
       }
 
       if (data.role === 'witness' && !data.paymentQrCode) {
@@ -141,9 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (signUpError) return { error: signUpError };
       if (!authData.user) return { error: new Error('注册失败') };
 
-      const finalRole = isFirstUser ? 'admin' : data.role;
-
-      const referralCode = (data.role === 'witness' || isFirstUser)
+      const referralCode = data.role === 'witness'
         ? `W${Date.now().toString(36).toUpperCase()}`
         : null;
 
@@ -153,9 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: authData.user.id,
           email: data.email,
           name: data.name,
-          role: finalRole,
+          role: data.role,
           referral_code: referralCode,
-          referred_by: referredById,
+          referred_by: existingProfile.id,
           payment_qr_code: data.paymentQrCode || null,
           status: 'active',
           witness_confirmed: data.role === 'player',
