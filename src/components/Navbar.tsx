@@ -45,9 +45,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">
-                预
-              </div>
+              <img
+                src="/分形logo.jpg"
+                alt="共权预测网"
+                className="w-8 h-8 object-contain"
+              />
               <span className="text-lg font-semibold text-gray-900">
                 共权预测网
               </span>
