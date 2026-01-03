@@ -51,8 +51,9 @@ Deno.serve(async (req: Request) => {
       console.error('Auth error:', userError);
       return new Response(
         JSON.stringify({ 
-          error: '未授权: ' + (userError?.message || '无法验证用户'),
-          details: userError 
+          error: '登录已过期，请退出后重新登录',
+          details: userError?.message || '无法验证用户',
+          hint: '您可能在使用旧的登录会话，请先退出登录，然后使用新的管理员账户重新登录'
         }),
         {
           status: 401,
