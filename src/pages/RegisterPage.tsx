@@ -23,6 +23,17 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onClose, onSwitchToL
   const [qrCodePreview, setQrCodePreview] = useState<string>('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+
+  React.useEffect(() => {
+    const checkFirstUser = async () => {
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      setIsFirstUser(count === 0);
+    };
+    checkFirstUser();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -177,17 +188,23 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onClose, onSwitchToL
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              见证人代码 <span className="text-red-500">*</span>
+              见证人代码 {!isFirstUser && <span className="text-red-500">*</span>}
             </label>
+            {isFirstUser && (
+              <p className="text-xs text-green-600 mb-1">
+                🎉 您是第一位用户！将自动成为管理员，无需推荐码
+              </p>
+            )}
             <input
               type="text"
               value={formData.referralCode}
               onChange={(e) =>
                 setFormData({ ...formData, referralCode: e.target.value })
               }
-              required
+              required={!isFirstUser}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="推荐码"
+              placeholder={isFirstUser ? "留空即可" : "推荐码"}
+              disabled={isFirstUser}
             />
           </div>
 

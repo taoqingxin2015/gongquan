@@ -145,13 +145,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? `W${Date.now().toString(36).toUpperCase()}`
         : null;
 
+      const finalRole = isFirstUser ? 'admin' : data.role;
+
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: authData.user.id,
           email: data.email,
           name: data.name,
-          role: data.role,
+          role: finalRole,
           referral_code: referralCode,
           referred_by: referredById,
           payment_qr_code: data.paymentQrCode || null,
