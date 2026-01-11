@@ -52,13 +52,16 @@ export const EventDetailPage: React.FC<EventDetailPageProps> = ({
     console.log('Fetched bets data:', betsData);
     console.log('Number of bets:', betsData?.length || 0);
 
-    const yesTotal = betsData
+    const actualYesTotal = betsData
       ?.filter((bet) => bet.direction === 'yes')
       .reduce((sum, bet) => sum + Number(bet.amount), 0) || 0;
 
-    const noTotal = betsData
+    const actualNoTotal = betsData
       ?.filter((bet) => bet.direction === 'no')
       .reduce((sum, bet) => sum + Number(bet.amount), 0) || 0;
+
+    const yesTotal = Number(event.yes_total || 0) + actualYesTotal;
+    const noTotal = Number(event.no_total || 0) + actualNoTotal;
 
     console.log('Yes total:', yesTotal, 'No total:', noTotal);
 

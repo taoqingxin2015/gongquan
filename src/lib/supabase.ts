@@ -33,6 +33,8 @@ export interface Event {
   rules: string;
   status: 'active' | 'banned' | 'expired';
   reveal_date: string;
+  yes_total?: number;
+  no_total?: number;
   created_at: string;
   updated_at: string;
 }

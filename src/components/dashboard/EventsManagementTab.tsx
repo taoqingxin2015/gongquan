@@ -45,12 +45,15 @@ export const EventsManagementTab: React.FC = () => {
           .eq('event_id', event.id);
 
         const confirmedBets = bets?.filter((b) => b.status === 'confirmed') || [];
-        const totalYesBets = confirmedBets
+        const actualYesBets = confirmedBets
           .filter((b) => b.direction === 'yes')
           .reduce((sum, b) => sum + Number(b.amount), 0);
-        const totalNoBets = confirmedBets
+        const actualNoBets = confirmedBets
           .filter((b) => b.direction === 'no')
           .reduce((sum, b) => sum + Number(b.amount), 0);
+
+        const totalYesBets = Number(event.yes_total || 0) + actualYesBets;
+        const totalNoBets = Number(event.no_total || 0) + actualNoBets;
 
         const isExpired = new Date(event.reveal_date) < new Date();
 
@@ -84,7 +87,19 @@ export const EventsManagementTab: React.FC = () => {
         fetchEvents();
       }
     } else {
-      const { error } = await supabase.from('events').insert([formData]);
+      const getRandomBetAmount = () => {
+        const base = 1000000;
+        const variance = Math.floor(Math.random() * 2000) - 1000;
+        return base + variance;
+      };
+
+      const newEvent = {
+        ...formData,
+        yes_total: getRandomBetAmount(),
+        no_total: getRandomBetAmount(),
+      };
+
+      const { error } = await supabase.from('events').insert([newEvent]);
 
       if (error) {
         alert('创建失败: ' + error.message);

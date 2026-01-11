@@ -32,13 +32,16 @@ export const EventCard: React.FC<EventCardProps> = ({
         return;
       }
 
-      const yesTotal = data
+      const actualYesTotal = data
         ?.filter((bet) => bet.direction === 'yes')
         .reduce((sum, bet) => sum + Number(bet.amount), 0) || 0;
 
-      const noTotal = data
+      const actualNoTotal = data
         ?.filter((bet) => bet.direction === 'no')
         .reduce((sum, bet) => sum + Number(bet.amount), 0) || 0;
+
+      const yesTotal = Number(event.yes_total || 0) + actualYesTotal;
+      const noTotal = Number(event.no_total || 0) + actualNoTotal;
 
       setYesBets(yesTotal);
       setNoBets(noTotal);
