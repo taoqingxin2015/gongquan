@@ -40,7 +40,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ onClose }) => {
                   收益 = 个人下注金额 ÷ 总押对金额 × 总押错金额 × 80%
                 </p>
                 <p className="text-gray-600 text-sm mt-2">
-                  注：剩余 20% 为平台抽成
+                  注：剩余 20% 为见证人见证服务费（可多级）
                 </p>
               </div>
               <div className="mt-4">
@@ -138,6 +138,19 @@ export const RulesPage: React.FC<RulesPageProps> = ({ onClose }) => {
               </div>
             </section>
           )}
+
+          <section className="border-t border-gray-200 pt-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              竞猜玩法流程
+            </h3>
+            <div className="flex justify-center items-center">
+              <img
+                src="/竞猜玩法流程图.png"
+                alt="竞猜玩法流程图"
+                className="max-w-full h-auto rounded-lg shadow-lg"
+              />
+            </div>
+          </section>
 
           <section className="border-t border-gray-200 pt-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
