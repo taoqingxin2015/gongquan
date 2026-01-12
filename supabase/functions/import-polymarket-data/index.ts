@@ -1,41 +1,14 @@
-/**
- * Import Polymarket Data to Supabase
- *
- * This script fetches active markets from Polymarket API and imports them
- * into the Supabase events table with appropriate categorization.
- *
- * Usage:
- *   node scripts/import-polymarket-data.js
- *
- * Requirements:
- *   - VITE_SUPABASE_URL environment variable
- *   - VITE_SUPABASE_ANON_KEY environment variable
- */
+import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 
-import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-
-config();
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('Error: Missing Supabase credentials in .env file');
-  console.error('Please ensure VITE_SUPABASE_URL and either SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY are set');
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+};
 
 const POLYMARKET_API = 'https://gamma-api.polymarket.com';
 
-const CATEGORY_MAPPING = {
+const CATEGORY_MAPPING: Record<string, string> = {
   'Politics': '政治',
   'Crypto': '加密货币',
   'Sports': '体育',
@@ -45,38 +18,17 @@ const CATEGORY_MAPPING = {
   'News': '时事',
 };
 
-function mapCategory(polymarketCategory) {
+function mapCategory(polymarketCategory: string): string {
   return CATEGORY_MAPPING[polymarketCategory] || '其他';
 }
 
-function getRandomBetAmount() {
+function getRandomBetAmount(): number {
   const base = 1000000;
   const variance = Math.floor(Math.random() * 2000) - 1000;
   return base + variance;
 }
 
-async function fetchPolymarketMarkets() {
-  console.log('Fetching markets from Polymarket...');
-
-  try {
-    const response = await fetch(`${POLYMARKET_API}/markets?limit=500&closed=false`);
-
-    if (!response.ok) {
-      throw new Error(`Polymarket API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log(`Fetched ${data.length} markets from Polymarket`);
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching Polymarket markets:', error);
-    throw error;
-  }
-}
-
 function generateSampleEvents(count = 20) {
-  const categories = ['政治', '经济', '科技', '体育', '娱乐', '时事'];
   const templates = [
     { title: '2026年美国中期选举中民主党是否能保持参议院多数席位？', category: '政治' },
     { title: '比特币价格是否会在2026年6月前突破10万美元？', category: '加密货币' },
@@ -100,7 +52,7 @@ function generateSampleEvents(count = 20) {
     { title: '某知名科技公司CEO是否会在2026年卸任？', category: '时事' }
   ];
 
-  return templates.slice(0, count).map((template, index) => {
+  return templates.slice(0, count).map((template) => {
     const daysToAdd = Math.floor(Math.random() * 180) + 30;
     const revealDate = new Date();
     revealDate.setDate(revealDate.getDate() + daysToAdd);
@@ -118,7 +70,7 @@ function generateSampleEvents(count = 20) {
   });
 }
 
-function convertPolymarketToEvent(market) {
+function convertPolymarketToEvent(market: any) {
   const yesTotal = getRandomBetAmount();
   const noTotal = getRandomBetAmount();
 
@@ -142,78 +94,129 @@ function convertPolymarketToEvent(market) {
   };
 }
 
-async function importEvents(events) {
-  console.log(`Importing ${events.length} events into Supabase...`);
-
-  const { data, error } = await supabase
-    .from('events')
-    .insert(events)
-    .select();
-
-  if (error) {
-    console.error('Error importing events:', error);
-    throw error;
+Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
   }
-
-  console.log(`Successfully imported ${data.length} events`);
-  return data;
-}
-
-async function main() {
-  console.log('='.repeat(60));
-  console.log('Polymarket Data Import Script');
-  console.log('='.repeat(60));
-  console.log();
-
-  let events = [];
 
   try {
-    const markets = await fetchPolymarketMarkets();
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    const now = new Date();
-    const futureMarkets = markets.filter(market => {
-      const endDate = market.endDate || market.end_date;
-      if (!endDate) return false;
-      const marketEndDate = new Date(endDate);
-      return marketEndDate > now;
-    });
-
-    console.log(`Found ${futureMarkets.length} future markets out of ${markets.length} total`);
-
-    if (futureMarkets.length > 0) {
-      events = futureMarkets
-        .map(convertPolymarketToEvent)
-        .slice(0, 50);
-      console.log(`Converted ${events.length} Polymarket markets to events`);
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    let events: any[] = [];
+
+    try {
+      const response = await fetch(`${POLYMARKET_API}/markets?limit=500&closed=false`);
+      
+      if (response.ok) {
+        const markets = await response.json();
+        
+        const now = new Date();
+        const futureMarkets = markets.filter((market: any) => {
+          const endDate = market.endDate || market.end_date;
+          if (!endDate) return false;
+          const marketEndDate = new Date(endDate);
+          return marketEndDate > now;
+        });
+
+        if (futureMarkets.length > 0) {
+          events = futureMarkets
+            .map(convertPolymarketToEvent)
+            .slice(0, 50);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching from Polymarket:', error);
+    }
+
+    if (events.length === 0) {
+      events = generateSampleEvents(20);
+    }
+
+    const { data, error } = await supabaseClient
+      .from('events')
+      .insert(events)
+      .select();
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        count: data.length,
+        message: `Successfully imported ${data.length} events`
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
-    console.error('Error fetching from Polymarket:', error.message);
-    console.log('Will use sample data instead...');
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
-
-  if (events.length === 0) {
-    console.log('Generating sample events...');
-    events = generateSampleEvents(20);
-    console.log(`Generated ${events.length} sample events`);
-  }
-
-  console.log();
-
-  if (events.length > 0) {
-    console.log('Sample event:');
-    console.log(JSON.stringify(events[0], null, 2));
-    console.log();
-
-    const imported = await importEvents(events);
-
-    console.log();
-    console.log('='.repeat(60));
-    console.log(`Import completed successfully!`);
-    console.log(`Total events imported: ${imported.length}`);
-    console.log('='.repeat(60));
-  } else {
-    console.log('No events to import.');
-  }
-}
-
-main();
+});

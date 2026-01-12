@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, Event } from '../../lib/supabase';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Download } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface EventWithStats extends Event {
   totalYesBets: number;
@@ -9,8 +10,10 @@ interface EventWithStats extends Event {
 }
 
 export const EventsManagementTab: React.FC = () => {
+  const { session } = useAuth();
   const [events, setEvents] = useState<EventWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
@@ -163,6 +166,45 @@ export const EventsManagementTab: React.FC = () => {
     setEditingEvent(null);
   };
 
+  const handleImportData = async () => {
+    if (!session) {
+      alert('请先登录');
+      return;
+    }
+
+    if (!confirm('确定要导入数据吗？这将从 Polymarket 或样本数据导入约 20-50 个事件。')) {
+      return;
+    }
+
+    setImporting(true);
+
+    try {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/import-polymarket-data`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '导入失败');
+      }
+
+      alert(`成功导入 ${result.count} 个事件！`);
+      fetchEvents();
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('导入失败: ' + (error as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const getStatusDisplay = (event: EventWithStats) => {
     if (event.isExpired) {
       return (
@@ -196,16 +238,26 @@ export const EventsManagementTab: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">事件管理</h3>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Plus className="h-5 w-5" />
-          <span>添加事件</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleImportData}
+            disabled={importing}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="h-5 w-5" />
+            <span>{importing ? '导入中...' : '导入数据'}</span>
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowModal(true);
+            }}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="h-5 w-5" />
+            <span>添加事件</span>
+          </button>
+        </div>
       </div>
 
       {events.length === 0 ? (
