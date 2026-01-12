@@ -103,17 +103,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -126,6 +115,22 @@ Deno.serve(async (req: Request) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
+    
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+        auth: {
+          persistSession: false,
+        },
+      }
+    );
+
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !userData.user) {
@@ -190,8 +195,9 @@ Deno.serve(async (req: Request) => {
       .select();
 
     if (error) {
+      console.error('Insert error:', error);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: error.message, details: error }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -211,8 +217,9 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, details: error.toString() }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
