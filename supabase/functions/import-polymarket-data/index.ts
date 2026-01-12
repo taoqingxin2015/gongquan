@@ -6,22 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
-const POLYMARKET_API = 'https://gamma-api.polymarket.com';
-
-const CATEGORY_MAPPING: Record<string, string> = {
-  'Politics': '政治',
-  'Crypto': '加密货币',
-  'Sports': '体育',
-  'Business': '经济',
-  'Science': '科技',
-  'Pop Culture': '娱乐',
-  'News': '时事',
-};
-
-function mapCategory(polymarketCategory: string): string {
-  return CATEGORY_MAPPING[polymarketCategory] || '其他';
-}
-
 function getRandomBetAmount(): number {
   const base = 1000000;
   const variance = Math.floor(Math.random() * 2000) - 1000;
@@ -70,30 +54,6 @@ function generateSampleEvents(count = 20) {
   });
 }
 
-function convertPolymarketToEvent(market: any) {
-  const yesTotal = getRandomBetAmount();
-  const noTotal = getRandomBetAmount();
-
-  const endDate = market.endDate || market.end_date;
-  const revealDate = endDate
-    ? new Date(endDate)
-    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-  const title = market.question || market.title || '未命名事件';
-  const description = market.description || market.groupItemTitle || title;
-
-  return {
-    title: title.substring(0, 200),
-    description: description.substring(0, 500),
-    category: mapCategory(market.category),
-    rules: market.rules || '根据 Polymarket 官方公布的结果判定。事件将在揭晓日期后由见证人根据公开信息进行判定。',
-    status: 'active',
-    reveal_date: revealDate.toISOString(),
-    yes_total: yesTotal,
-    no_total: noTotal,
-  };
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -106,7 +66,7 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
+        JSON.stringify({ error: '缺少认证头' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -116,7 +76,8 @@ Deno.serve(async (req: Request) => {
 
     const token = authHeader.replace('Bearer ', '');
     
-    const supabaseClient = createClient(
+    // 使用 anon key 验证用户身份
+    const authClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
@@ -131,11 +92,11 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
 
     if (userError || !userData.user) {
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: '无效的认证令牌' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -143,15 +104,26 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: profile, error: profileError } = await supabaseClient
+    // 检查是否是管理员
+    const { data: profile, error: profileError } = await authClient
       .from('profiles')
       .select('role')
       .eq('id', userData.user.id)
       .maybeSingle();
 
-    if (profileError || !profile || profile.role !== 'admin') {
+    if (profileError) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
+        JSON.stringify({ error: '获取用户信息失败：' + profileError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (!profile || profile.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: '需要管理员权限' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -159,37 +131,20 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let events: any[] = [];
-
-    try {
-      const response = await fetch(`${POLYMARKET_API}/markets?limit=500&closed=false`);
-      
-      if (response.ok) {
-        const markets = await response.json();
-        
-        const now = new Date();
-        const futureMarkets = markets.filter((market: any) => {
-          const endDate = market.endDate || market.end_date;
-          if (!endDate) return false;
-          const marketEndDate = new Date(endDate);
-          return marketEndDate > now;
-        });
-
-        if (futureMarkets.length > 0) {
-          events = futureMarkets
-            .map(convertPolymarketToEvent)
-            .slice(0, 50);
-        }
+    // 使用 service role key 插入数据，绕过 RLS
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          persistSession: false,
+        },
       }
-    } catch (error) {
-      console.error('Error fetching from Polymarket:', error);
-    }
+    );
 
-    if (events.length === 0) {
-      events = generateSampleEvents(20);
-    }
+    const events = generateSampleEvents(20);
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabaseAdmin
       .from('events')
       .insert(events)
       .select();
@@ -197,7 +152,7 @@ Deno.serve(async (req: Request) => {
     if (error) {
       console.error('Insert error:', error);
       return new Response(
-        JSON.stringify({ error: error.message, details: error }),
+        JSON.stringify({ error: '插入失败：' + error.message, details: error }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -209,7 +164,7 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({ 
         success: true, 
         count: data.length,
-        message: `Successfully imported ${data.length} events`
+        message: `成功导入 ${data.length} 个事件`
       }),
       {
         status: 200,
@@ -219,7 +174,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message, details: error.toString() }),
+      JSON.stringify({ error: '服务器错误：' + (error.message || '未知错误'), details: error.toString() }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
