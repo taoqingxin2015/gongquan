@@ -91,8 +91,8 @@ export const EventsManagementTab: React.FC = () => {
       }
     } else {
       const getRandomBetAmount = () => {
-        const base = 1000000;
-        const variance = Math.floor(Math.random() * 2000) - 1000;
+        const base = 10000;
+        const variance = Math.floor(Math.random() * 201) - 100;
         return base + variance;
       };
 
@@ -180,8 +180,8 @@ export const EventsManagementTab: React.FC = () => {
 
     try {
       const getRandomBetAmount = () => {
-        const base = 1000000;
-        const variance = Math.floor(Math.random() * 2000) - 1000;
+        const base = 10000;
+        const variance = Math.floor(Math.random() * 201) - 100;
         return base + variance;
       };
 
