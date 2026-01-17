@@ -416,6 +416,7 @@ export const EventsManagementTab: React.FC = () => {
                   <option>社会</option>
                   <option>体育</option>
                   <option>文化</option>
+                  <option>娱乐</option>
                   <option>军事</option>
                   <option>国际</option>
                   <option>美国</option>
