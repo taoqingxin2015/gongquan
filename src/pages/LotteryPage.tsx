@@ -220,7 +220,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h2 className="text-2xl font-bold text-gray-900">福彩刮刮乐</h2>
+          <h2 className="text-2xl font-bold text-gray-900">福彩呱呱乐</h2>
         </div>
 
         <div className="bg-blue-50 rounded-lg p-6 mb-6">
@@ -258,7 +258,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
           <div className="bg-white rounded-lg shadow-md flex flex-col" style={{ height: 'calc(50vh - 4rem)' }}>
             <div className="flex-shrink-0 p-6 pb-0">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">当前期投注情况</h3>
+                <h3 className="text-xl font-bold text-gray-900">当前投注情况</h3>
                 {profile?.role === 'admin' && (
                   <button
                     onClick={() => setShowDrawModal(true)}

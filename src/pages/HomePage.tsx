@@ -24,7 +24,7 @@ const categories = [
   '军事',
   '国际',
   '美国',
-  '福彩刮刮乐',
+  '福彩呱呱乐',
 ];
 
 export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, onBetClick, onLotteryClick, isLoggedIn }) => {
@@ -34,7 +34,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, o
   const [selectedCategory, setSelectedCategory] = useState('全部');
 
   const handleCategoryClick = (category: string) => {
-    if (category === '福彩刮刮乐') {
+    if (category === '福彩呱呱乐') {
       if (onLotteryClick) {
         onLotteryClick();
       }
@@ -82,7 +82,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, o
       <div className="mb-6 overflow-x-auto">
         <div className="flex space-x-2 min-w-max">
           {categories.map((category) => {
-            const isLottery = category === '福彩刮刮乐';
+            const isLottery = category === '福彩呱呱乐';
             const isDisabled = isLottery && !isLoggedIn;
 
             return (

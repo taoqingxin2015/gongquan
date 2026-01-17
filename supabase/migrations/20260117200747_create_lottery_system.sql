@@ -2,7 +2,7 @@
   # Create Lottery System
 
   ## Overview
-  This migration creates the database schema for the "福彩刮刮乐" (Lottery Scratch) system.
+  This migration creates the database schema for the "福彩呱呱乐" (Lottery Scratch) system.
   
   ## New Tables
   

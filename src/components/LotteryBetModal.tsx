@@ -117,7 +117,7 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900">投注福彩刮刮乐</h3>
+          <h3 className="text-xl font-bold text-gray-900">投注福彩呱呱乐</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
