@@ -85,6 +85,8 @@ function AppContent() {
             searchQuery={searchQuery}
             onEventClick={handleEventClick}
             onBetClick={handleBetClick}
+            onLotteryClick={() => setCurrentPage('lottery')}
+            isLoggedIn={!!profile}
           />
         );
     }
@@ -98,7 +100,6 @@ function AppContent() {
           onRegisterClick={() => setCurrentPage('register')}
           onRulesClick={() => setCurrentPage('rules')}
           onDashboardClick={() => setCurrentPage('dashboard')}
-          onLotteryClick={() => setCurrentPage('lottery')}
           onSearch={setSearchQuery}
         />
       )}

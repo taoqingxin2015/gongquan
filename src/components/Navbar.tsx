@@ -7,7 +7,6 @@ interface NavbarProps {
   onRegisterClick: () => void;
   onRulesClick: () => void;
   onDashboardClick: () => void;
-  onLotteryClick: () => void;
   onSearch: (query: string) => void;
 }
 
@@ -16,7 +15,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRegisterClick,
   onRulesClick,
   onDashboardClick,
-  onLotteryClick,
   onSearch,
 }) => {
   const { profile, signOut } = useAuth();
@@ -76,15 +74,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               怎么玩
             </button>
-
-            {profile && (
-              <button
-                onClick={onLotteryClick}
-                className="text-green-600 hover:text-green-700 font-medium"
-              >
-                福彩刮刮乐
-              </button>
-            )}
           </div>
 
           <div className="flex items-center space-x-4">

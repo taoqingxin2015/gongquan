@@ -7,6 +7,8 @@ interface HomePageProps {
   searchQuery: string;
   onEventClick: (event: Event) => void;
   onBetClick?: (event: Event, direction: 'yes' | 'no') => void;
+  onLotteryClick?: () => void;
+  isLoggedIn?: boolean;
 }
 
 const categories = [
@@ -22,13 +24,24 @@ const categories = [
   '军事',
   '国际',
   '美国',
+  '福彩刮刮乐',
 ];
 
-export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, onBetClick }) => {
+export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, onBetClick, onLotteryClick, isLoggedIn }) => {
   const { profile } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('全部');
+
+  const handleCategoryClick = (category: string) => {
+    if (category === '福彩刮刮乐') {
+      if (onLotteryClick) {
+        onLotteryClick();
+      }
+    } else {
+      setSelectedCategory(category);
+    }
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -68,19 +81,30 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onEventClick, o
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 overflow-x-auto">
         <div className="flex space-x-2 min-w-max">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                selectedCategory === category
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+          {categories.map((category) => {
+            const isLottery = category === '福彩刮刮乐';
+            const isDisabled = isLottery && !isLoggedIn;
+
+            return (
+              <button
+                key={category}
+                onClick={() => handleCategoryClick(category)}
+                disabled={isDisabled}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                  selectedCategory === category
+                    ? 'bg-blue-600 text-white'
+                    : isLottery
+                    ? isLoggedIn
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                title={isDisabled ? '请先登录' : ''}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
       </div>
 

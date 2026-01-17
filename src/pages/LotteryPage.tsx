@@ -48,6 +48,9 @@ export const LotteryPage: React.FC = () => {
   const [showDrawModal, setShowDrawModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<LotteryPeriod | null>(null);
+  const [isEditingPeriod, setIsEditingPeriod] = useState(false);
+  const [editPeriodNumber, setEditPeriodNumber] = useState('');
+  const [editDrawDate, setEditDrawDate] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -142,6 +145,45 @@ export const LotteryPage: React.FC = () => {
     setShowDetailModal(true);
   };
 
+  const handleEditPeriod = () => {
+    if (currentPeriod) {
+      setEditPeriodNumber(currentPeriod.period_number);
+      setEditDrawDate(currentPeriod.expected_draw_date);
+      setIsEditingPeriod(true);
+    }
+  };
+
+  const handleSavePeriod = async () => {
+    if (!currentPeriod) return;
+
+    try {
+      const { error } = await supabase
+        .from('lottery_periods')
+        .update({
+          period_number: editPeriodNumber,
+          expected_draw_date: editDrawDate,
+        })
+        .eq('id', currentPeriod.id);
+
+      if (error) throw error;
+
+      alert('更新成功');
+      setIsEditingPeriod(false);
+      fetchData();
+    } catch (error: any) {
+      console.error('Error updating period:', error);
+      alert('更新失败: ' + error.message);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingPeriod(false);
+    if (currentPeriod) {
+      setEditPeriodNumber(currentPeriod.period_number);
+      setEditDrawDate(currentPeriod.expected_draw_date);
+    }
+  };
+
   const totalBetAmount = currentBets.reduce((sum, bet) => sum + Number(bet.bet_amount), 0);
   const totalBetCount = currentBets.length;
 
@@ -206,24 +248,72 @@ export const LotteryPage: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gray-50 rounded-lg p-4">
-              <div>
-                <div className="text-sm text-gray-600">期号</div>
-                <div className="text-lg font-semibold text-gray-900">{currentPeriod.period_number}</div>
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-sm font-medium text-gray-700">当期信息</div>
+                {profile?.role === 'admin' && !isEditingPeriod && (
+                  <button
+                    onClick={handleEditPeriod}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    编辑
+                  </button>
+                )}
+                {isEditingPeriod && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleSavePeriod}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-3 py-1 text-sm bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors"
+                    >
+                      取消
+                    </button>
+                  </div>
+                )}
               </div>
-              <div>
-                <div className="text-sm text-gray-600">预计开奖日期</div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {new Date(currentPeriod.expected_draw_date).toLocaleDateString('zh-CN')}
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">期号</div>
+                  {isEditingPeriod ? (
+                    <input
+                      type="text"
+                      value={editPeriodNumber}
+                      onChange={(e) => setEditPeriodNumber(e.target.value)}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <div className="text-lg font-semibold text-gray-900">{currentPeriod.period_number}</div>
+                  )}
                 </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">累积投注额</div>
-                <div className="text-lg font-semibold text-green-600">¥{totalBetAmount.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">投注人数</div>
-                <div className="text-lg font-semibold text-blue-600">{totalBetCount}人</div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">预计开奖日期</div>
+                  {isEditingPeriod ? (
+                    <input
+                      type="date"
+                      value={editDrawDate}
+                      onChange={(e) => setEditDrawDate(e.target.value)}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <div className="text-lg font-semibold text-gray-900">
+                      {new Date(currentPeriod.expected_draw_date).toLocaleDateString('zh-CN')}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">累积投注额</div>
+                  <div className="text-lg font-semibold text-green-600">¥{totalBetAmount.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">投注人数</div>
+                  <div className="text-lg font-semibold text-blue-600">{totalBetCount}人</div>
+                </div>
               </div>
             </div>
 
