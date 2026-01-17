@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface LoginPageProps {
   onClose: () => void;
@@ -13,11 +14,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, onSwitchToRegiste
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [waitingForConfirmation, setWaitingForConfirmation] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setWaitingForConfirmation(false);
 
     const { error: signInError } = await signIn(email, password);
 
@@ -27,6 +30,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, onSwitchToRegiste
         : signInError.message);
       setLoading(false);
       return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, witness_confirmed')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile && profile.role === 'witness' && !profile.witness_confirmed) {
+        setWaitingForConfirmation(true);
+        setLoading(false);
+        await supabase.auth.signOut();
+        return;
+      }
     }
 
     setLoading(false);
@@ -49,6 +68,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, onSwitchToRegiste
           {error && (
             <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
               {error}
+            </div>
+          )}
+
+          {waitingForConfirmation && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-amber-900 mb-1">等待确认中</h3>
+                  <p className="text-sm text-amber-700">
+                    您的见证人注册正在等待上一级见证人确认。请耐心等待确认后再登录使用完整功能。
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
