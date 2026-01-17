@@ -211,64 +211,66 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="space-y-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <button
-              onClick={onClose}
-              className="mr-3 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <h2 className="text-2xl font-bold text-gray-900">福彩刮刮乐</h2>
-          </div>
+    <div className="h-screen flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex-shrink-0 bg-white rounded-lg shadow-md p-6 mt-8 mb-4 sticky top-0 z-10">
+        <div className="flex items-center mb-4">
+          <button
+            onClick={onClose}
+            className="mr-3 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900">福彩刮刮乐</h2>
+        </div>
 
-          <div className="bg-blue-50 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">玩法规则</h3>
-            <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
-              <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
+        <div className="bg-blue-50 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">玩法规则</h3>
+          <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
+            <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
 
-              <p><strong>开奖规则：</strong>系统开奖与福彩双色球开奖同步，结果由第三方公信力机构决定，网站无法造假。</p>
+            <p><strong>开奖规则：</strong>系统开奖与福彩双色球开奖同步，结果由第三方公信力机构决定，网站无法造假。</p>
 
-              <p><strong>中奖算法：</strong></p>
-              <ol className="list-decimal list-inside space-y-1 ml-4">
-                <li>对福彩开奖号码（7个号码按出球顺序连接）做SHA-256哈希运算，得到256比特结果</li>
-                <li>用该结果循环截半做异或运算，直到其换算的十进制数首次落入此次开奖总注数范围（1～N）内停止</li>
-                <li>该结果即为中奖顺序号</li>
-              </ol>
+            <p><strong>中奖算法：</strong></p>
+            <ol className="list-decimal list-inside space-y-1 ml-4">
+              <li>对福彩开奖号码（7个号码按出球顺序连接）做SHA-256哈希运算，得到256比特结果</li>
+              <li>用该结果循环截半做异或运算，直到其换算的十进制数首次落入此次开奖总注数范围（1～N）内停止</li>
+              <li>该结果即为中奖顺序号</li>
+            </ol>
 
-              <p><strong>奖金分配：</strong>中奖者获得本期总投注额的80%。例如总投注额为2万元，则奖金为1.6万元。剩余20%为各级相关见证人见证服务费。</p>
+            <p><strong>奖金分配：</strong>中奖者获得本期总投注额的80%。例如总投注额为2万元，则奖金为1.6万元。剩余20%为各级相关见证人见证服务费。</p>
 
-              <p className="text-green-700 font-medium">此规则保证每期必有幸运儿中奖，中奖者由公开数学算法决定，结果公平公正！</p>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              onClick={() => setShowBetModal(true)}
-              className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
-            >
-              立即下注
-            </button>
+            <p className="text-green-700 font-medium">此规则保证每期必有幸运儿中奖，中奖者由公开数学算法决定，结果公平公正！</p>
           </div>
         </div>
 
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowBetModal(true)}
+            className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          >
+            立即下注
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-8 space-y-4">
         {currentPeriod && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">当前期投注情况</h3>
-              {profile?.role === 'admin' && (
-                <button
-                  onClick={() => setShowDrawModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  开奖
-                </button>
-              )}
+          <div className="bg-white rounded-lg shadow-md flex flex-col" style={{ height: 'calc(50vh - 4rem)' }}>
+            <div className="flex-shrink-0 p-6 pb-0">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">当前期投注情况</h3>
+                {profile?.role === 'admin' && (
+                  <button
+                    onClick={() => setShowDrawModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    开奖
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex-shrink-0 mx-6 bg-gray-50 rounded-lg p-4 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="text-sm font-medium text-gray-700">当期信息</div>
                 {profile?.role === 'admin' && !isEditingPeriod && (
@@ -337,118 +339,126 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
               <div className="text-sm font-medium text-gray-700 mb-2">投注记录</div>
               {currentBets.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">暂无投注记录</div>
               ) : (
-                <div className="max-h-64 overflow-y-auto border rounded-lg">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">序号</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">注数序号</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注时间</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注金额</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {currentBets.map((bet, index) => (
-                        <tr key={bet.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 text-sm">{index + 1}</td>
-                          <td className="px-4 py-2 text-sm font-medium text-blue-600">
-                            {bet.sequence_start === bet.sequence_end
-                              ? bet.sequence_start
-                              : `${bet.sequence_start}-${bet.sequence_end}`}
-                          </td>
-                          <td className="px-4 py-2 text-sm">{bet.user?.name || '未知用户'}</td>
-                          <td className="px-4 py-2 text-sm">
-                            {new Date(bet.created_at).toLocaleString('zh-CN')}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-green-600 font-medium">
-                            ¥{Number(bet.bet_amount).toLocaleString()}
-                          </td>
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="overflow-y-auto" style={{ maxHeight: 'calc(50vh - 20rem)' }}>
+                    <table className="w-full">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">序号</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">注数序号</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注时间</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注金额</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {currentBets.map((bet, index) => (
+                          <tr key={bet.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 text-sm">{index + 1}</td>
+                            <td className="px-4 py-2 text-sm font-medium text-blue-600">
+                              {bet.sequence_start === bet.sequence_end
+                                ? bet.sequence_start
+                                : `${bet.sequence_start}-${bet.sequence_end}`}
+                            </td>
+                            <td className="px-4 py-2 text-sm">{bet.user?.name || '未知用户'}</td>
+                            <td className="px-4 py-2 text-sm">
+                              {new Date(bet.created_at).toLocaleString('zh-CN')}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-green-600 font-medium">
+                              ¥{Number(bet.bet_amount).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">历史开奖记录</h3>
+        <div className="bg-white rounded-lg shadow-md flex flex-col" style={{ height: 'calc(50vh - 4rem)' }}>
+          <div className="flex-shrink-0 p-6 pb-4">
+            <h3 className="text-xl font-bold text-gray-900">历史开奖记录</h3>
+          </div>
 
           {historyPeriods.length === 0 ? (
             <div className="text-center py-8 text-gray-500">暂无历史开奖记录</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">期号</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">开奖日期</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">开奖号码</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">总销售额</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">中奖序号</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">奖金</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">详情</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {historyPeriods.map((period) => (
-                    <tr key={period.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium">{period.period_number}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {period.actual_draw_date
-                          ? new Date(period.actual_draw_date).toLocaleDateString('zh-CN')
-                          : '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {period.winning_numbers && Array.isArray(period.winning_numbers) ? (
-                          <div className="flex space-x-1">
-                            {period.winning_numbers.slice(0, 6).map((num, idx) => (
-                              <div
-                                key={idx}
-                                className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold"
-                              >
-                                {num}
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">期号</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">开奖日期</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">开奖号码</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">总销售额</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">中奖序号</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">奖金</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">详情</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {historyPeriods.map((period) => (
+                        <tr key={period.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm font-medium">{period.period_number}</td>
+                          <td className="px-4 py-3 text-sm">
+                            {period.actual_draw_date
+                              ? new Date(period.actual_draw_date).toLocaleDateString('zh-CN')
+                              : '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            {period.winning_numbers && Array.isArray(period.winning_numbers) ? (
+                              <div className="flex space-x-1">
+                                {period.winning_numbers.slice(0, 6).map((num, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold"
+                                  >
+                                    {num}
+                                  </div>
+                                ))}
+                                {period.winning_numbers[6] && (
+                                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                                    {period.winning_numbers[6]}
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                            {period.winning_numbers[6] && (
-                              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                                {period.winning_numbers[6]}
-                              </div>
+                            ) : (
+                              '-'
                             )}
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-green-600 font-medium">
-                        ¥{Number(period.total_amount || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-bold text-blue-600">
-                        {period.winning_sequence_number || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-orange-600 font-bold">
-                        ¥{Number(period.prize_amount || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleViewDetail(period)}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Search className="h-5 w-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-green-600 font-medium">
+                            ¥{Number(period.total_amount || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-blue-600">
+                            {period.winning_sequence_number || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-orange-600 font-bold">
+                            ¥{Number(period.prize_amount || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleViewDetail(period)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Search className="h-5 w-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
         </div>
