@@ -107,7 +107,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
       if (currentData) {
         const { data: betsData, error: betsError } = await supabase
           .from('lottery_bets')
-          .select('*')
+          .select('*, profiles(name)')
           .eq('period_id', currentData.id)
           .eq('status', 'confirmed')
           .order('sequence_start', { ascending: true });
@@ -345,7 +345,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">序号</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">注数序号</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人ID</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注时间</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注金额</th>
                       </tr>
@@ -359,7 +359,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                               ? bet.sequence_start
                               : `${bet.sequence_start}-${bet.sequence_end}`}
                           </td>
-                          <td className="px-4 py-2 text-sm font-mono text-xs break-all">{bet.user_id}</td>
+                          <td className="px-4 py-2 text-sm">{bet.profiles?.name || '未知用户'}</td>
                           <td className="px-4 py-2 text-sm">
                             {new Date(bet.created_at).toLocaleString('zh-CN')}
                           </td>
