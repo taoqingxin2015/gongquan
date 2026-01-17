@@ -45,7 +45,7 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
   const fetchBets = async () => {
     const { data, error } = await supabase
       .from('lottery_bets')
-      .select('*, profiles(name)')
+      .select('*, user:profiles!user_id(name)')
       .eq('period_id', period.id)
       .eq('status', 'confirmed')
       .order('sequence_start', { ascending: true });
@@ -147,7 +147,7 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-gray-600">中奖用户：</span>
-                  <span className="font-semibold">{winningBet.profiles?.name || '未知'}</span>
+                  <span className="font-semibold">{winningBet.user?.name || '未知'}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">投注金额：</span>
@@ -227,7 +227,7 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                               : `${bet.sequence_start}-${bet.sequence_end}`}
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            {bet.profiles?.name || '未知用户'}
+                            {bet.user?.name || '未知用户'}
                           </td>
                           <td className="px-4 py-2 text-sm">
                             {new Date(bet.created_at).toLocaleString('zh-CN')}

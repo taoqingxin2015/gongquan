@@ -108,7 +108,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
         console.log('Fetching bets for period:', currentData.id);
         const { data: betsData, error: betsError } = await supabase
           .from('lottery_bets')
-          .select('*, profiles(name)')
+          .select('*, user:profiles!user_id(name)')
           .eq('period_id', currentData.id)
           .eq('status', 'confirmed')
           .order('sequence_start', { ascending: true });
@@ -362,7 +362,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                               ? bet.sequence_start
                               : `${bet.sequence_start}-${bet.sequence_end}`}
                           </td>
-                          <td className="px-4 py-2 text-sm">{bet.profiles?.name || '未知用户'}</td>
+                          <td className="px-4 py-2 text-sm">{bet.user?.name || '未知用户'}</td>
                           <td className="px-4 py-2 text-sm">
                             {new Date(bet.created_at).toLocaleString('zh-CN')}
                           </td>
