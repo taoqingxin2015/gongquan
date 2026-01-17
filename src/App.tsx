@@ -78,7 +78,7 @@ function AppContent() {
       case 'rules':
         return <RulesPage onClose={() => setCurrentPage('home')} />;
       case 'lottery':
-        return <LotteryPage />;
+        return <LotteryPage onClose={() => setCurrentPage('home')} />;
       default:
         return (
           <HomePage

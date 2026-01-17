@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Loader } from 'lucide-react';
+import { Search, Loader, ArrowLeft } from 'lucide-react';
 import { LotteryBetModal } from '../components/LotteryBetModal';
 import { LotteryDrawModal } from '../components/LotteryDrawModal';
 import { LotteryDetailModal } from '../components/LotteryDetailModal';
@@ -38,7 +38,11 @@ interface LotteryBet {
   };
 }
 
-export const LotteryPage: React.FC = () => {
+interface LotteryPageProps {
+  onClose: () => void;
+}
+
+export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   const { profile } = useAuth();
   const [currentPeriod, setCurrentPeriod] = useState<LotteryPeriod | null>(null);
   const [currentBets, setCurrentBets] = useState<LotteryBet[]>([]);
@@ -202,7 +206,15 @@ export const LotteryPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-8">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">福彩刮刮乐</h2>
+          <div className="flex items-center mb-4">
+            <button
+              onClick={onClose}
+              className="mr-3 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+            <h2 className="text-2xl font-bold text-gray-900">福彩刮刮乐</h2>
+          </div>
 
           <div className="bg-blue-50 rounded-lg p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">玩法规则</h3>
