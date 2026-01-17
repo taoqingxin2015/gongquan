@@ -189,7 +189,8 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   };
 
   const totalBetAmount = currentPeriod?.total_amount || 0;
-  const totalBetCount = currentPeriod?.total_bets || 0;
+  const uniqueUserIds = new Set(currentBets.map(bet => bet.user_id));
+  const totalBetCount = uniqueUserIds.size;
 
   if (loading) {
     return (
@@ -338,9 +339,9 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                   <table className="w-full">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注序号</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">序号</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">注数序号</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注人ID</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注时间</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">投注金额</th>
                       </tr>
@@ -354,7 +355,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                               ? bet.sequence_start
                               : `${bet.sequence_start}-${bet.sequence_end}`}
                           </td>
-                          <td className="px-4 py-2 text-sm">{bet.profiles?.name || '未知用户'}</td>
+                          <td className="px-4 py-2 text-sm font-mono text-xs break-all">{bet.user_id}</td>
                           <td className="px-4 py-2 text-sm">
                             {new Date(bet.created_at).toLocaleString('zh-CN')}
                           </td>

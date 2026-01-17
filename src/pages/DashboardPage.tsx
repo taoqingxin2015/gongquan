@@ -9,7 +9,6 @@ import { PlayersManagementTab } from '../components/dashboard/PlayersManagementT
 import { EventsManagementTab } from '../components/dashboard/EventsManagementTab';
 import { BetConfirmationTab } from '../components/dashboard/BetConfirmationTab';
 import { LotteryBetConfirmationTab } from '../components/dashboard/LotteryBetConfirmationTab';
-import { LotteryBetsTab } from '../components/dashboard/LotteryBetsTab';
 import { PendingWitnessesTab } from '../components/dashboard/PendingWitnessesTab';
 
 interface DashboardPageProps {
@@ -30,13 +29,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
         return [
           { id: 'info', label: '用户信息' },
           { id: 'bets', label: '下注项目' },
-          { id: 'lottery-bets', label: '彩票投注' },
         ];
       case 'witness':
         return [
           { id: 'info', label: '用户信息' },
           { id: 'bets', label: '下注项目' },
-          { id: 'lottery-bets', label: '彩票投注' },
           { id: 'players', label: '玩家列表' },
           { id: 'confirmations', label: '待确认投注' },
           { id: 'lottery-confirmations', label: '待确认彩票投注' },
@@ -65,8 +62,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
         return <UserInfoTab />;
       case 'bets':
         return <BetsTab />;
-      case 'lottery-bets':
-        return <LotteryBetsTab />;
       case 'players':
         return profile.role === 'witness' ? (
           <PlayersListTab />
