@@ -34,7 +34,7 @@ interface LotteryBet {
   confirmed_at: string | null;
   created_at: string;
   profiles?: {
-    username: string;
+    name: string;
   };
 }
 
@@ -106,7 +106,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
       if (currentData) {
         const { data: betsData, error: betsError } = await supabase
           .from('lottery_bets')
-          .select('*, profiles(username)')
+          .select('*, profiles(name)')
           .eq('period_id', currentData.id)
           .eq('status', 'confirmed')
           .order('sequence_start', { ascending: true });
@@ -354,7 +354,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                               ? bet.sequence_start
                               : `${bet.sequence_start}-${bet.sequence_end}`}
                           </td>
-                          <td className="px-4 py-2 text-sm">{bet.profiles?.username || '未知用户'}</td>
+                          <td className="px-4 py-2 text-sm">{bet.profiles?.name || '未知用户'}</td>
                           <td className="px-4 py-2 text-sm">
                             {new Date(bet.created_at).toLocaleString('zh-CN')}
                           </td>
