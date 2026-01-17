@@ -188,8 +188,8 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
     }
   };
 
-  const totalBetAmount = currentBets.reduce((sum, bet) => sum + Number(bet.bet_amount), 0);
-  const totalBetCount = currentBets.length;
+  const totalBetAmount = currentPeriod?.total_amount || 0;
+  const totalBetCount = currentPeriod?.total_bets || 0;
 
   if (loading) {
     return (
