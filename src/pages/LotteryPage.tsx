@@ -101,12 +101,13 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
     if (currentError) {
       console.error('Error fetching current period:', currentError);
     } else {
+      console.log('Fetched current period:', currentData);
       setCurrentPeriod(currentData);
 
       if (currentData) {
         const { data: betsData, error: betsError } = await supabase
           .from('lottery_bets')
-          .select('*, profiles(name)')
+          .select('*')
           .eq('period_id', currentData.id)
           .eq('status', 'confirmed')
           .order('sequence_start', { ascending: true });
@@ -114,8 +115,11 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
         if (betsError) {
           console.error('Error fetching current bets:', betsError);
         } else {
+          console.log('Fetched bets data:', betsData);
           setCurrentBets(betsData || []);
         }
+      } else {
+        console.log('No current period found');
       }
     }
 
