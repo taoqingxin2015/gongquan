@@ -105,6 +105,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
       setCurrentPeriod(currentData);
 
       if (currentData) {
+        console.log('Fetching bets for period:', currentData.id);
         const { data: betsData, error: betsError } = await supabase
           .from('lottery_bets')
           .select('*, profiles(name)')
@@ -114,8 +115,10 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
 
         if (betsError) {
           console.error('Error fetching current bets:', betsError);
+          console.error('Error details:', JSON.stringify(betsError, null, 2));
         } else {
           console.log('Fetched bets data:', betsData);
+          console.log('Bets count:', betsData?.length || 0);
           setCurrentBets(betsData || []);
         }
       } else {
