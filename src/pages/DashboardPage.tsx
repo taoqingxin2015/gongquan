@@ -8,6 +8,7 @@ import { WitnessListTab } from '../components/dashboard/WitnessListTab';
 import { PlayersManagementTab } from '../components/dashboard/PlayersManagementTab';
 import { EventsManagementTab } from '../components/dashboard/EventsManagementTab';
 import { BetConfirmationTab } from '../components/dashboard/BetConfirmationTab';
+import { LotteryBetConfirmationTab } from '../components/dashboard/LotteryBetConfirmationTab';
 import { PendingWitnessesTab } from '../components/dashboard/PendingWitnessesTab';
 
 interface DashboardPageProps {
@@ -35,6 +36,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
           { id: 'bets', label: '下注项目' },
           { id: 'players', label: '玩家列表' },
           { id: 'confirmations', label: '待确认投注' },
+          { id: 'lottery-confirmations', label: '待确认彩票投注' },
           { id: 'pending-witnesses', label: '待确认下一级见证人' },
         ];
       case 'admin':
@@ -42,6 +44,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
           { id: 'info', label: '用户信息' },
           { id: 'players', label: '玩家列表' },
           { id: 'confirmations', label: '待确认投注' },
+          { id: 'lottery-confirmations', label: '待确认彩票投注' },
           { id: 'pending-witnesses', label: '待确认下一级见证人' },
           { id: 'witnesses', label: '见证人列表' },
           { id: 'events', label: '事件管理' },
@@ -67,6 +70,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onClose }) => {
         );
       case 'confirmations':
         return <BetConfirmationTab />;
+      case 'lottery-confirmations':
+        return <LotteryBetConfirmationTab />;
       case 'witnesses':
         return <WitnessListTab />;
       case 'events':

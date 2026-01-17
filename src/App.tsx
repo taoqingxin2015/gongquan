@@ -7,10 +7,11 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { RulesPage } from './pages/RulesPage';
+import { LotteryPage } from './pages/LotteryPage';
 import { BetModal } from './components/BetModal';
 import { Event } from './lib/supabase';
 
-type PageView = 'home' | 'login' | 'register' | 'dashboard' | 'event' | 'rules';
+type PageView = 'home' | 'login' | 'register' | 'dashboard' | 'event' | 'rules' | 'lottery';
 
 function AppContent() {
   const { profile } = useAuth();
@@ -76,6 +77,8 @@ function AppContent() {
         ) : null;
       case 'rules':
         return <RulesPage onClose={() => setCurrentPage('home')} />;
+      case 'lottery':
+        return <LotteryPage />;
       default:
         return (
           <HomePage
@@ -95,6 +98,7 @@ function AppContent() {
           onRegisterClick={() => setCurrentPage('register')}
           onRulesClick={() => setCurrentPage('rules')}
           onDashboardClick={() => setCurrentPage('dashboard')}
+          onLotteryClick={() => setCurrentPage('lottery')}
           onSearch={setSearchQuery}
         />
       )}
