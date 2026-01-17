@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Check, X, ExternalLink } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 interface LotteryBetConfirmation {
   id: string;
@@ -61,7 +61,7 @@ export const LotteryBetConfirmationTab: React.FC = () => {
         user:profiles!lottery_bets_user_id_fkey(name),
         period:lottery_periods(period_number)
       `)
-      .eq('status', 'pending')
+      .eq('witness_id', profile.id)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -187,9 +187,8 @@ export const LotteryBetConfirmationTab: React.FC = () => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">投注金额</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">注数</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">序号范围</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">支付凭证</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">投注时间</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">操作</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">确认状态</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -207,41 +206,32 @@ export const LotteryBetConfirmationTab: React.FC = () => {
                       ? bet.sequence_start
                       : `${bet.sequence_start}-${bet.sequence_end}`}
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    {bet.payment_proof ? (
-                      <a
-                        href={bet.payment_proof}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-600 hover:text-blue-700"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        查看
-                      </a>
-                    ) : (
-                      <span className="text-gray-400">无</span>
-                    )}
-                  </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {new Date(bet.created_at).toLocaleString('zh-CN')}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleConfirm(bet.id, bet.period_id, bet.bet_count)}
-                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 flex items-center space-x-1"
-                      >
-                        <Check className="h-4 w-4" />
-                        <span>确认</span>
-                      </button>
-                      <button
-                        onClick={() => handleReject(bet.id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 flex items-center space-x-1"
-                      >
-                        <X className="h-4 w-4" />
-                        <span>拒绝</span>
-                      </button>
-                    </div>
+                    {bet.status === 'pending' ? (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleConfirm(bet.id, bet.period_id, bet.bet_count)}
+                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 flex items-center space-x-1"
+                        >
+                          <Check className="h-4 w-4" />
+                          <span>确认</span>
+                        </button>
+                        <button
+                          onClick={() => handleReject(bet.id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 flex items-center space-x-1"
+                        >
+                          <X className="h-4 w-4" />
+                          <span>拒绝</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-700">
+                        已确认
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
