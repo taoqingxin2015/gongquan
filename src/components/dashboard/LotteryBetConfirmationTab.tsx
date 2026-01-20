@@ -94,15 +94,22 @@ export const LotteryBetConfirmationTab: React.FC = () => {
     if (!confirm('确认通过该彩票投注吗？')) return;
 
     try {
-      const { data: periodData, error: periodError } = await supabase
-        .from('lottery_periods')
-        .select('total_bets, total_amount')
-        .eq('id', periodId)
-        .single();
+      const { data: confirmedBets, error: confirmedBetsError } = await supabase
+        .from('lottery_bets')
+        .select('sequence_end')
+        .eq('period_id', periodId)
+        .eq('status', 'confirmed')
+        .not('sequence_end', 'is', null)
+        .order('sequence_end', { ascending: false })
+        .limit(1);
 
-      if (periodError) {
-        throw periodError;
+      if (confirmedBetsError) {
+        throw confirmedBetsError;
       }
+
+      const maxSequenceEnd = confirmedBets && confirmedBets.length > 0 ? confirmedBets[0].sequence_end : 0;
+      const sequenceStart = maxSequenceEnd + 1;
+      const sequenceEnd = maxSequenceEnd + betCount;
 
       const { data: betData, error: betError } = await supabase
         .from('lottery_bets')
@@ -113,10 +120,6 @@ export const LotteryBetConfirmationTab: React.FC = () => {
       if (betError) {
         throw betError;
       }
-
-      const currentTotalBets = periodData.total_bets || 0;
-      const sequenceStart = currentTotalBets + 1;
-      const sequenceEnd = currentTotalBets + betCount;
 
       const { error: updateBetError } = await supabase
         .from('lottery_bets')
@@ -133,7 +136,17 @@ export const LotteryBetConfirmationTab: React.FC = () => {
         throw updateBetError;
       }
 
-      const newTotalBets = currentTotalBets + betCount;
+      const { data: periodData, error: periodError } = await supabase
+        .from('lottery_periods')
+        .select('total_bets, total_amount')
+        .eq('id', periodId)
+        .single();
+
+      if (periodError) {
+        throw periodError;
+      }
+
+      const newTotalBets = (periodData.total_bets || 0) + betCount;
       const newTotalAmount = Number(periodData.total_amount || 0) + Number(betData.bet_amount);
 
       const { error: updatePeriodError } = await supabase
