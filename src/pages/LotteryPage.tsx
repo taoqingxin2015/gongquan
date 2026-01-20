@@ -272,23 +272,45 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
         </div>
       </div>
 
-      <div
-        ref={rulesRef}
-        className="flex-shrink-0 bg-white rounded-lg shadow-md mb-4 overflow-hidden cursor-pointer transition-all duration-300"
-        onClick={() => setRulesExpanded(!rulesExpanded)}
-      >
-        <div className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">玩法规则</h3>
-            {rulesExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
+      <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+        <div
+          ref={rulesRef}
+          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300"
+          style={{
+            minHeight: rulesExpanded ? '200px' : '80px',
+            maxHeight: rulesExpanded ? '40vh' : '80px'
+          }}
+        >
+          <div
+            className="p-4 sm:p-6 cursor-pointer"
+            onClick={() => setRulesExpanded(!rulesExpanded)}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-900">玩法规则</h3>
+              {rulesExpanded ? (
+                <ChevronUp className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              )}
+            </div>
+
+            {!rulesExpanded && (
+              <div className="flex justify-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowBetModal(true);
+                  }}
+                  className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  立即下注
+                </button>
+              </div>
             )}
           </div>
 
-          {rulesExpanded ? (
-            <>
+          {rulesExpanded && (
+            <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(40vh - 80px)' }}>
               <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mb-4">
                 <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
                   <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
@@ -318,31 +340,22 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                   立即下注
                 </button>
               </div>
-            </>
-          ) : (
-            <div className="flex justify-center mt-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowBetModal(true);
-                }}
-                className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                立即下注
-              </button>
             </div>
           )}
         </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto pb-4 space-y-4">
         {currentPeriod && (
           <div
             ref={currentBetsRef}
-            className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300"
-            onClick={() => setCurrentBetsExpanded(!currentBetsExpanded)}
+            className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-1"
+            style={{
+              minHeight: currentBetsExpanded ? '200px' : '160px',
+              maxHeight: currentBetsExpanded ? '45vh' : '160px'
+            }}
           >
-            <div className="p-4 sm:p-6">
+            <div
+              className="p-4 sm:p-6 cursor-pointer"
+              onClick={() => setCurrentBetsExpanded(!currentBetsExpanded)}
+            >
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-900">当前投注情况</h3>
@@ -365,7 +378,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                 )}
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                 <div className="flex justify-between items-center mb-3">
                   <div className="text-xs sm:text-sm font-medium text-gray-700">当期信息</div>
                   {profile?.role === 'admin' && !isEditingPeriod && (
@@ -444,9 +457,10 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {currentBetsExpanded && (
-                <div>
+            {currentBetsExpanded && (
+              <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: currentBetsExpanded ? 'calc(45vh - 200px)' : '0px' }}>
                   <div className="text-sm font-medium text-gray-700 mb-2">投注记录</div>
                   {currentBets.length === 0 ? (
                     <div className="text-center py-6 text-gray-500 text-sm">暂无投注记录</div>
@@ -497,17 +511,22 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                   )}
                 </div>
               )}
-            </div>
           </div>
         )}
 
         <div
           ref={historyRef}
-          className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300"
-          onClick={() => setHistoryExpanded(!historyExpanded)}
+          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-1"
+          style={{
+            minHeight: historyExpanded ? '200px' : '120px',
+            maxHeight: historyExpanded ? '45vh' : '120px'
+          }}
         >
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div
+            className="p-4 sm:p-6 cursor-pointer"
+            onClick={() => setHistoryExpanded(!historyExpanded)}
+          >
+            <div className="flex items-center justify-between">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900">历史开奖记录</h3>
               {historyExpanded ? (
                 <ChevronUp className="h-5 w-5 text-gray-500" />
@@ -515,14 +534,16 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                 <ChevronDown className="h-5 w-5 text-gray-500" />
               )}
             </div>
+          </div>
 
-            {historyPeriods.length === 0 ? (
-              <div className="text-center py-6 text-gray-500 text-sm">暂无历史开奖记录</div>
-            ) : (
+          {historyPeriods.length === 0 ? (
+            <div className="px-4 sm:px-6 pb-4 text-center py-6 text-gray-500 text-sm">暂无历史开奖记录</div>
+          ) : (
+            <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: historyExpanded ? 'calc(45vh - 80px)' : 'calc(120px - 80px)' }}>
               <div className="border rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs sm:text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 sticky top-0">
                       <tr>
                         <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">期号</th>
                         <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">开奖日期</th>
@@ -594,8 +615,8 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                   )}
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
