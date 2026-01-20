@@ -79,9 +79,6 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
       }
 
       const betCount = amount / 2;
-      const currentTotalBets = period.total_bets;
-      const sequenceStart = currentTotalBets + 1;
-      const sequenceEnd = currentTotalBets + betCount;
 
       const { error } = await supabase.from('lottery_bets').insert([
         {
@@ -90,8 +87,6 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
           witness_id: witnessData.id,
           bet_amount: amount,
           bet_count: betCount,
-          sequence_start: sequenceStart,
-          sequence_end: sequenceEnd,
           status: 'pending',
         },
       ]);
@@ -177,7 +172,7 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
               <div className="mt-2 text-sm">
                 {isValidAmount ? (
                   <span className="text-green-600">
-                    将获得 {betCount} 注，序号 {period.total_bets + 1} - {period.total_bets + betCount}
+                    将获得 {betCount} 注
                   </span>
                 ) : (
                   <span className="text-red-600">

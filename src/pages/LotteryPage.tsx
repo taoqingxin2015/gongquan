@@ -26,8 +26,8 @@ interface LotteryBet {
   user_id: string;
   bet_amount: number;
   bet_count: number;
-  sequence_start: number;
-  sequence_end: number;
+  sequence_start: number | null;
+  sequence_end: number | null;
   status: 'pending' | 'confirmed';
   payment_proof: string | null;
   confirmed_by: string | null;
@@ -111,7 +111,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
           .select('*, user:profiles!user_id(name)')
           .eq('period_id', currentData.id)
           .eq('status', 'confirmed')
-          .order('sequence_start', { ascending: true });
+          .order('confirmed_at', { ascending: true });
 
         if (betsError) {
           console.error('Error fetching current bets:', betsError);
@@ -361,9 +361,13 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                           <tr key={bet.id} className="hover:bg-gray-50">
                             <td className="px-4 py-2 text-sm">{index + 1}</td>
                             <td className="px-4 py-2 text-sm font-medium text-blue-600">
-                              {bet.sequence_start === bet.sequence_end
-                                ? bet.sequence_start
-                                : `${bet.sequence_start}-${bet.sequence_end}`}
+                              {bet.sequence_start && bet.sequence_end ? (
+                                bet.sequence_start === bet.sequence_end
+                                  ? bet.sequence_start
+                                  : `${bet.sequence_start}-${bet.sequence_end}`
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-2 text-sm">{bet.user?.name || '未知用户'}</td>
                             <td className="px-4 py-2 text-sm">

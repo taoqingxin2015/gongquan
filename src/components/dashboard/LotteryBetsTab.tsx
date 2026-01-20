@@ -8,8 +8,8 @@ interface LotteryBet {
   user_id: string;
   bet_amount: number;
   bet_count: number;
-  sequence_start: number;
-  sequence_end: number;
+  sequence_start: number | null;
+  sequence_end: number | null;
   status: 'pending' | 'confirmed';
   payment_proof: string | null;
   confirmed_by: string | null;
@@ -129,9 +129,13 @@ export const LotteryBetsTab: React.FC = () => {
                     {new Date(bet.created_at).toLocaleString('zh-CN')}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-blue-600">
-                    {bet.sequence_start === bet.sequence_end
-                      ? bet.sequence_start
-                      : `${bet.sequence_start}-${bet.sequence_end}`}
+                    {bet.sequence_start && bet.sequence_end ? (
+                      bet.sequence_start === bet.sequence_end
+                        ? bet.sequence_start
+                        : `${bet.sequence_start}-${bet.sequence_end}`
+                    ) : (
+                      <span className="text-gray-400">待确认</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {bet.bet_count}注

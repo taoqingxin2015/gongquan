@@ -20,8 +20,8 @@ interface LotteryBet {
   user_id: string;
   bet_amount: number;
   bet_count: number;
-  sequence_start: number;
-  sequence_end: number;
+  sequence_start: number | null;
+  sequence_end: number | null;
   status: string;
   created_at: string;
   profiles?: {
@@ -48,7 +48,7 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
       .select('*, user:profiles!user_id(name)')
       .eq('period_id', period.id)
       .eq('status', 'confirmed')
-      .order('sequence_start', { ascending: true });
+      .order('confirmed_at', { ascending: true });
 
     if (error) {
       console.error('Error fetching bets:', error);
@@ -62,6 +62,8 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
   const winningBet = bets.find(
     (bet) =>
       period.winning_sequence_number &&
+      bet.sequence_start !== null &&
+      bet.sequence_end !== null &&
       bet.sequence_start <= period.winning_sequence_number &&
       bet.sequence_end >= period.winning_sequence_number
   );
@@ -158,9 +160,13 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                 <div>
                   <span className="text-gray-600">注数范围：</span>
                   <span className="font-semibold text-blue-600">
-                    {winningBet.sequence_start === winningBet.sequence_end
-                      ? winningBet.sequence_start
-                      : `${winningBet.sequence_start}-${winningBet.sequence_end}`}
+                    {winningBet.sequence_start && winningBet.sequence_end ? (
+                      winningBet.sequence_start === winningBet.sequence_end
+                        ? winningBet.sequence_start
+                        : `${winningBet.sequence_start}-${winningBet.sequence_end}`
+                    ) : (
+                      '-'
+                    )}
                   </span>
                 </div>
                 <div>
@@ -210,6 +216,8 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                     {bets.map((bet, index) => {
                       const isWinner =
                         period.winning_sequence_number &&
+                        bet.sequence_start !== null &&
+                        bet.sequence_end !== null &&
                         bet.sequence_start <= period.winning_sequence_number &&
                         bet.sequence_end >= period.winning_sequence_number;
 
@@ -222,9 +230,13 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                         >
                           <td className="px-4 py-2 text-sm">{index + 1}</td>
                           <td className="px-4 py-2 text-sm font-medium text-blue-600">
-                            {bet.sequence_start === bet.sequence_end
-                              ? bet.sequence_start
-                              : `${bet.sequence_start}-${bet.sequence_end}`}
+                            {bet.sequence_start && bet.sequence_end ? (
+                              bet.sequence_start === bet.sequence_end
+                                ? bet.sequence_start
+                                : `${bet.sequence_start}-${bet.sequence_end}`
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="px-4 py-2 text-sm">
                             {bet.user?.name || '未知用户'}

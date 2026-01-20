@@ -9,8 +9,8 @@ interface LotteryBetConfirmation {
   user_id: string;
   bet_amount: number;
   bet_count: number;
-  sequence_start: number;
-  sequence_end: number;
+  sequence_start: number | null;
+  sequence_end: number | null;
   status: string;
   payment_proof: string | null;
   created_at: string;
@@ -94,19 +94,6 @@ export const LotteryBetConfirmationTab: React.FC = () => {
     if (!confirm('确认通过该彩票投注吗？')) return;
 
     try {
-      const { error: updateBetError } = await supabase
-        .from('lottery_bets')
-        .update({
-          status: 'confirmed',
-          confirmed_by: profile.id,
-          confirmed_at: new Date().toISOString(),
-        })
-        .eq('id', betId);
-
-      if (updateBetError) {
-        throw updateBetError;
-      }
-
       const { data: periodData, error: periodError } = await supabase
         .from('lottery_periods')
         .select('total_bets, total_amount')
@@ -127,7 +114,26 @@ export const LotteryBetConfirmationTab: React.FC = () => {
         throw betError;
       }
 
-      const newTotalBets = (periodData.total_bets || 0) + betCount;
+      const currentTotalBets = periodData.total_bets || 0;
+      const sequenceStart = currentTotalBets + 1;
+      const sequenceEnd = currentTotalBets + betCount;
+
+      const { error: updateBetError } = await supabase
+        .from('lottery_bets')
+        .update({
+          status: 'confirmed',
+          confirmed_by: profile.id,
+          confirmed_at: new Date().toISOString(),
+          sequence_start: sequenceStart,
+          sequence_end: sequenceEnd,
+        })
+        .eq('id', betId);
+
+      if (updateBetError) {
+        throw updateBetError;
+      }
+
+      const newTotalBets = currentTotalBets + betCount;
       const newTotalAmount = Number(periodData.total_amount || 0) + Number(betData.bet_amount);
 
       const { error: updatePeriodError } = await supabase
@@ -202,9 +208,13 @@ export const LotteryBetConfirmationTab: React.FC = () => {
                   </td>
                   <td className="px-4 py-3 text-sm font-semibold">{bet.bet_count}</td>
                   <td className="px-4 py-3 text-sm text-blue-600 font-medium">
-                    {bet.sequence_start === bet.sequence_end
-                      ? bet.sequence_start
-                      : `${bet.sequence_start}-${bet.sequence_end}`}
+                    {bet.sequence_start && bet.sequence_end ? (
+                      bet.sequence_start === bet.sequence_end
+                        ? bet.sequence_start
+                        : `${bet.sequence_start}-${bet.sequence_end}`
+                    ) : (
+                      <span className="text-gray-400">待分配</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {new Date(bet.created_at).toLocaleString('zh-CN')}
