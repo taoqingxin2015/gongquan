@@ -90,16 +90,10 @@ export const EventsManagementTab: React.FC = () => {
         fetchEvents();
       }
     } else {
-      const getRandomBetAmount = () => {
-        const base = 10000;
-        const variance = Math.floor(Math.random() * 201) - 100;
-        return base + variance;
-      };
-
       const newEvent = {
         ...formData,
-        yes_total: getRandomBetAmount(),
-        no_total: getRandomBetAmount(),
+        yes_total: 0,
+        no_total: 0,
       };
 
       const { error } = await supabase.from('events').insert([newEvent]);
@@ -179,12 +173,6 @@ export const EventsManagementTab: React.FC = () => {
     setImporting(true);
 
     try {
-      const getRandomBetAmount = () => {
-        const base = 10000;
-        const variance = Math.floor(Math.random() * 201) - 100;
-        return base + variance;
-      };
-
       const templates = [
         { title: '2026年美国中期选举中民主党是否能保持参议院多数席位？', category: '政治' },
         { title: '比特币价格是否会在2026年6月前突破10万美元？', category: '加密货币' },
@@ -220,8 +208,8 @@ export const EventsManagementTab: React.FC = () => {
           rules: '根据官方公布的结果或权威媒体报道判定。如果在揭晓日期前事件已有明确结果，将提前结算。如果揭晓日期时仍无法判定，将延期至有明确结果为止。',
           status: 'active',
           reveal_date: revealDate.toISOString(),
-          yes_total: getRandomBetAmount(),
-          no_total: getRandomBetAmount(),
+          yes_total: 0,
+          no_total: 0,
         };
       });
 
