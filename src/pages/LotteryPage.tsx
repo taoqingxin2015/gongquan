@@ -78,10 +78,16 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
 
       if (scrollPercentage < 0.2) {
         setRulesExpanded(true);
+        setCurrentBetsExpanded(false);
         setHistoryExpanded(false);
       } else if (scrollPercentage > 0.5) {
         setRulesExpanded(false);
+        setCurrentBetsExpanded(false);
         setHistoryExpanded(true);
+      } else {
+        setRulesExpanded(false);
+        setCurrentBetsExpanded(true);
+        setHistoryExpanded(false);
       }
     };
 
@@ -287,9 +293,13 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                 <h3 className="text-lg font-semibold text-gray-900">玩法规则</h3>
                 <button
                   onClick={() => {
-                    setRulesExpanded(!rulesExpanded);
                     if (!rulesExpanded) {
+                      setRulesExpanded(true);
+                      setCurrentBetsExpanded(false);
+                      setHistoryExpanded(false);
                       setTimeout(() => scrollToSection(rulesRef), 100);
+                    } else {
+                      setRulesExpanded(false);
                     }
                   }}
                   className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -358,29 +368,25 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                     )}
                     <button
                       onClick={() => {
-                        setCurrentBetsExpanded(!currentBetsExpanded);
                         if (!currentBetsExpanded) {
+                          setRulesExpanded(false);
+                          setCurrentBetsExpanded(true);
+                          setHistoryExpanded(false);
                           setTimeout(() => scrollToSection(currentBetsRef), 100);
+                        } else {
+                          setCurrentBetsExpanded(false);
                         }
                       }}
                       className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       {currentBetsExpanded ? (
-                        rulesExpanded ? (
-                          <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
-                        ) : historyExpanded ? (
-                          <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
-                        ) : (
-                          <ChevronUp className="h-5 w-5 text-gray-500" />
-                        )
+                        <ChevronUp className="h-5 w-5 text-gray-500" />
+                      ) : rulesExpanded ? (
+                        <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                      ) : historyExpanded ? (
+                        <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
                       ) : (
-                        rulesExpanded ? (
-                          <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
-                        ) : historyExpanded ? (
-                          <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-blue-500 animate-bounce" />
-                        )
+                        <ChevronDown className="h-5 w-5 text-blue-500 animate-bounce" />
                       )}
                     </button>
                   </div>
@@ -524,15 +530,19 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900">历史开奖记录</h3>
                 <button
                   onClick={() => {
-                    setHistoryExpanded(!historyExpanded);
                     if (!historyExpanded) {
+                      setRulesExpanded(false);
+                      setCurrentBetsExpanded(false);
+                      setHistoryExpanded(true);
                       setTimeout(() => scrollToSection(historyRef), 100);
+                    } else {
+                      setHistoryExpanded(false);
                     }
                   }}
                   className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   {historyExpanded ? (
-                    <ChevronDown className="h-5 w-5 text-gray-500 animate-bounce" />
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
                   ) : (
                     <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
                   )}
