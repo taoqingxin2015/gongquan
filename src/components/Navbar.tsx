@@ -8,6 +8,7 @@ interface NavbarProps {
   onRulesClick: () => void;
   onDashboardClick: () => void;
   onSearch: (query: string) => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,8 +17,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRulesClick,
   onDashboardClick,
   onSearch,
+  onLogout,
 }) => {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -108,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        signOut();
+                        onLogout();
                       }}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >

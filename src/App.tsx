@@ -14,7 +14,7 @@ import { Event } from './lib/supabase';
 type PageView = 'home' | 'login' | 'register' | 'dashboard' | 'event' | 'rules' | 'lottery';
 
 function AppContent() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageView>('home');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +22,11 @@ function AppContent() {
     event: Event;
     direction: 'yes' | 'no';
   } | null>(null);
+
+  const handleLogout = async () => {
+    await signOut();
+    setCurrentPage('home');
+  };
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -101,6 +106,7 @@ function AppContent() {
           onRulesClick={() => setCurrentPage('rules')}
           onDashboardClick={() => setCurrentPage('dashboard')}
           onSearch={setSearchQuery}
+          onLogout={handleLogout}
         />
       )}
       {renderPage()}
