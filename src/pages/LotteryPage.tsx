@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Loader, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Loader, ArrowLeft, ChevronDown, ChevronUp, ChevronsUp, ChevronsDown } from 'lucide-react';
 import { LotteryBetModal } from '../components/LotteryBetModal';
 import { LotteryDrawModal } from '../components/LotteryDrawModal';
 import { LotteryDetailModal } from '../components/LotteryDetailModal';
@@ -57,9 +57,10 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   const [editDrawDate, setEditDrawDate] = useState('');
 
   const [rulesExpanded, setRulesExpanded] = useState(true);
-  const [currentBetsExpanded, setCurrentBetsExpanded] = useState(true);
-  const [historyExpanded, setHistoryExpanded] = useState(true);
+  const [currentBetsExpanded, setCurrentBetsExpanded] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const rulesRef = useRef<HTMLDivElement>(null);
   const currentBetsRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -95,45 +96,21 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.3,
-    };
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current && containerRef.current) {
+      const container = containerRef.current;
+      const element = ref.current;
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const scrollTop = container.scrollTop;
+      const targetScroll = scrollTop + (elementRect.top - containerRect.top);
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.target === rulesRef.current) {
-          if (!entry.isIntersecting && rulesExpanded) {
-            setRulesExpanded(false);
-          } else if (entry.isIntersecting && !rulesExpanded) {
-            setRulesExpanded(true);
-          }
-        } else if (entry.target === currentBetsRef.current) {
-          if (!entry.isIntersecting && currentBetsExpanded) {
-            setCurrentBetsExpanded(false);
-          } else if (entry.isIntersecting && !currentBetsExpanded) {
-            setCurrentBetsExpanded(true);
-          }
-        } else if (entry.target === historyRef.current) {
-          if (!entry.isIntersecting && historyExpanded) {
-            setHistoryExpanded(false);
-          } else if (entry.isIntersecting && !historyExpanded) {
-            setHistoryExpanded(true);
-          }
-        }
+      container.scrollTo({
+        top: targetScroll,
+        behavior: 'smooth'
       });
-    }, observerOptions);
-
-    if (rulesRef.current) observer.observe(rulesRef.current);
-    if (currentBetsRef.current) observer.observe(currentBetsRef.current);
-    if (historyRef.current) observer.observe(historyRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [rulesExpanded, currentBetsExpanded, historyExpanded]);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -260,7 +237,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
 
   return (
     <div className="h-screen flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex-shrink-0 mb-4">
+      <div className="flex-shrink-0 mb-4 sticky top-0 bg-white z-50 pb-2 border-b-2 border-gray-200">
         <div className="flex items-center">
           <button
             onClick={onClose}
@@ -268,239 +245,329 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h2 className="text-2xl font-bold text-gray-900">福彩呱呱乐</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">福彩呱呱乐</h2>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex-1 flex flex-col space-y-4 overflow-y-auto"
+      >
         <div
           ref={rulesRef}
-          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300"
-          style={{
-            minHeight: rulesExpanded ? '200px' : '80px',
-            maxHeight: rulesExpanded ? '40vh' : '80px'
-          }}
+          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-shrink-0"
         >
-          <div
-            className="p-4 sm:p-6 cursor-pointer"
-            onClick={() => setRulesExpanded(!rulesExpanded)}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">玩法规则</h3>
-              {rulesExpanded ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
-              )}
-            </div>
-
-            {!rulesExpanded && (
-              <div className="flex justify-center">
+          <div className="relative">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-900">玩法规则</h3>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowBetModal(true);
+                  onClick={() => {
+                    setRulesExpanded(!rulesExpanded);
+                    if (!rulesExpanded) {
+                      setTimeout(() => scrollToSection(rulesRef), 100);
+                    }
                   }}
-                  className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  立即下注
+                  {rulesExpanded ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
+                  )}
                 </button>
               </div>
-            )}
-          </div>
 
-          {rulesExpanded && (
-            <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(40vh - 80px)' }}>
-              <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mb-4">
-                <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
-                  <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
+              {rulesExpanded && (
+                <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>
+                  <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mb-4">
+                    <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
+                      <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
 
-                  <p><strong>开奖规则：</strong>系统开奖与福彩双色球开奖同步，结果由第三方公信力机构决定，网站无法造假。</p>
+                      <p><strong>开奖规则：</strong>系统开奖与福彩双色球开奖同步，结果由第三方公信力机构决定，网站无法造假。</p>
 
-                  <p><strong>中奖算法：</strong></p>
-                  <ol className="list-decimal list-inside space-y-1 ml-4">
-                    <li>对福彩开奖号码（7个号码按出球顺序连接）做SHA-256哈希运算，得到256比特结果</li>
-                    <li>用该结果循环截半做异或运算，直到其换算的十进制数首次落入此次开奖总注数范围（1～N）内停止</li>
-                    <li>该结果即为中奖顺序号</li>
-                  </ol>
+                      <p><strong>中奖算法：</strong></p>
+                      <ol className="list-decimal list-inside space-y-1 ml-4">
+                        <li>对福彩开奖号码（7个号码按出球顺序连接）做SHA-256哈希运算，得到256比特结果</li>
+                        <li>用该结果循环截半做异或运算，直到其换算的十进制数首次落入此次开奖总注数范围（1～N）内停止</li>
+                        <li>该结果即为中奖顺序号</li>
+                      </ol>
 
-                  <p><strong>奖金分配：</strong>中奖者获得本期总投注额的80%。例如总投注额为2万元，则奖金为1.6万元。剩余20%为各级相关见证人见证服务费。</p>
+                      <p><strong>奖金分配：</strong>中奖者获得本期总投注额的80%。例如总投注额为2万元，则奖金为1.6万元。剩余20%为各级相关见证人见证服务费。</p>
 
-                  <p className="text-green-700 font-medium">此规则保证每期必有幸运儿中奖，中奖者由公开数学算法决定，结果公平公正！</p>
+                      <p className="text-green-700 font-medium">此规则保证每期必有幸运儿中奖，中奖者由公开数学算法决定，结果公平公正！</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-center">
+              )}
+
+              <div className="flex justify-center mt-4">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowBetModal(true);
-                  }}
-                  className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                  onClick={() => setShowBetModal(true)}
+                  className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md"
                 >
                   立即下注
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
         {currentPeriod && (
           <div
             ref={currentBetsRef}
-            className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-1"
-            style={{
-              minHeight: currentBetsExpanded ? '200px' : '160px',
-              maxHeight: currentBetsExpanded ? '45vh' : '160px'
-            }}
+            className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-shrink-0"
           >
-            <div
-              className="p-4 sm:p-6 cursor-pointer"
-              onClick={() => setCurrentBetsExpanded(!currentBetsExpanded)}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center">
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">当前投注情况</h3>
-                  {currentBetsExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500 ml-2" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500 ml-2" />
-                  )}
-                </div>
-                {profile?.role === 'admin' && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDrawModal(true);
-                    }}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    开奖
-                  </button>
-                )}
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <div className="text-xs sm:text-sm font-medium text-gray-700">当期信息</div>
-                  {profile?.role === 'admin' && !isEditingPeriod && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditPeriod();
-                      }}
-                      className="px-2 py-1 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                    >
-                      编辑
-                    </button>
-                  )}
-                  {isEditingPeriod && (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSavePeriod();
-                        }}
-                        className="px-2 py-1 text-xs sm:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                      >
-                        保存
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCancelEdit();
-                        }}
-                        className="px-2 py-1 text-xs sm:text-sm bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors"
-                      >
-                        取消
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">期号</div>
-                    {isEditingPeriod ? (
-                      <input
-                        type="text"
-                        value={editPeriodNumber}
-                        onChange={(e) => setEditPeriodNumber(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <div className="text-sm sm:text-base font-semibold text-gray-900">{currentPeriod.period_number}</div>
-                    )}
+            <div className="relative">
+              <div className="p-4 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">当前投注情况</h3>
                   </div>
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">预计开奖</div>
-                    {isEditingPeriod ? (
-                      <input
-                        type="date"
-                        value={editDrawDate}
-                        onChange={(e) => setEditDrawDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <div className="text-sm sm:text-base font-semibold text-gray-900">
-                        {new Date(currentPeriod.expected_draw_date).toLocaleDateString('zh-CN')}
+                  <div className="flex items-center space-x-2">
+                    {profile?.role === 'admin' && (
+                      <button
+                        onClick={() => setShowDrawModal(true)}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        开奖
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setCurrentBetsExpanded(!currentBetsExpanded);
+                        if (!currentBetsExpanded) {
+                          setTimeout(() => scrollToSection(currentBetsRef), 100);
+                        }
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      {currentBetsExpanded ? (
+                        <ChevronUp className="h-5 w-5 text-gray-500 animate-bounce" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-xs sm:text-sm font-medium text-gray-700">当期信息</div>
+                    {profile?.role === 'admin' && !isEditingPeriod && (
+                      <button
+                        onClick={handleEditPeriod}
+                        className="px-2 py-1 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      >
+                        编辑
+                      </button>
+                    )}
+                    {isEditingPeriod && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleSavePeriod}
+                          className="px-2 py-1 text-xs sm:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="px-2 py-1 text-xs sm:text-sm bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors"
+                        >
+                          取消
+                        </button>
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">累积投注额</div>
-                    <div className="text-sm sm:text-base font-semibold text-green-600">¥{totalBetAmount.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">投注人数</div>
-                    <div className="text-sm sm:text-base font-semibold text-blue-600">{totalBetCount}人</div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">期号</div>
+                      {isEditingPeriod ? (
+                        <input
+                          type="text"
+                          value={editPeriodNumber}
+                          onChange={(e) => setEditPeriodNumber(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      ) : (
+                        <div className="text-sm sm:text-base font-semibold text-gray-900">{currentPeriod.period_number}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">预计开奖</div>
+                      {isEditingPeriod ? (
+                        <input
+                          type="date"
+                          value={editDrawDate}
+                          onChange={(e) => setEditDrawDate(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      ) : (
+                        <div className="text-sm sm:text-base font-semibold text-gray-900">
+                          {new Date(currentPeriod.expected_draw_date).toLocaleDateString('zh-CN')}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">累积投注额</div>
+                      <div className="text-sm sm:text-base font-semibold text-green-600">¥{totalBetAmount.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">投注人数</div>
+                      <div className="text-sm sm:text-base font-semibold text-blue-600">{totalBetCount}人</div>
+                    </div>
                   </div>
                 </div>
+
+                {currentBetsExpanded && (
+                  <div className="mt-4">
+                    <div className="overflow-y-auto" style={{ maxHeight: '40vh' }}>
+                      <div className="text-sm font-medium text-gray-700 mb-2">投注记录</div>
+                      {currentBets.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500 text-sm">暂无投注记录</div>
+                      ) : (
+                        <div className="border rounded-lg overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs sm:text-sm">
+                              <thead className="bg-gray-50 sticky top-0">
+                                <tr>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">序号</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">注数序号</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注人</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注时间</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注金额</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {currentBets.map((bet, index) => (
+                                  <tr key={bet.id} className="hover:bg-gray-50">
+                                    <td className="px-2 sm:px-4 py-2">{index + 1}</td>
+                                    <td className="px-2 sm:px-4 py-2 font-medium text-blue-600">
+                                      {bet.sequence_start && bet.sequence_end ? (
+                                        bet.sequence_start === bet.sequence_end
+                                          ? bet.sequence_start
+                                          : `${bet.sequence_start}-${bet.sequence_end}`
+                                      ) : (
+                                        <span className="text-gray-400">-</span>
+                                      )}
+                                    </td>
+                                    <td className="px-2 sm:px-4 py-2">{bet.user?.name || '未知用户'}</td>
+                                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                                      {new Date(bet.created_at).toLocaleString('zh-CN', {
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </td>
+                                    <td className="px-2 sm:px-4 py-2 text-green-600 font-medium">
+                                      ¥{Number(bet.bet_amount).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        )}
 
-            {currentBetsExpanded && (
-              <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: currentBetsExpanded ? 'calc(45vh - 200px)' : '0px' }}>
-                  <div className="text-sm font-medium text-gray-700 mb-2">投注记录</div>
-                  {currentBets.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500 text-sm">暂无投注记录</div>
+        <div
+          ref={historyRef}
+          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-shrink-0 mb-4"
+        >
+          <div className="relative">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">历史开奖记录</h3>
+                <button
+                  onClick={() => {
+                    setHistoryExpanded(!historyExpanded);
+                    if (!historyExpanded) {
+                      setTimeout(() => scrollToSection(historyRef), 100);
+                    }
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {historyExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-gray-500 animate-bounce" />
                   ) : (
+                    <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                  )}
+                </button>
+              </div>
+
+              {historyPeriods.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 text-sm">暂无历史开奖记录</div>
+              ) : (
+                <div>
+                  <div className="overflow-y-auto" style={{ maxHeight: historyExpanded ? '50vh' : '120px' }}>
                     <div className="border rounded-lg overflow-hidden">
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs sm:text-sm">
-                          <thead className="bg-gray-50">
+                          <thead className="bg-gray-50 sticky top-0">
                             <tr>
-                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">序号</th>
-                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">注数序号</th>
-                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注人</th>
-                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注时间</th>
-                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注金额</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">期号</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">开奖日期</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">开奖号码</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">总销售额</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">中奖序号</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">奖金</th>
+                              <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">详情</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200">
-                            {currentBets.map((bet, index) => (
-                              <tr key={bet.id} className="hover:bg-gray-50">
-                                <td className="px-2 sm:px-4 py-2">{index + 1}</td>
-                                <td className="px-2 sm:px-4 py-2 font-medium text-blue-600">
-                                  {bet.sequence_start && bet.sequence_end ? (
-                                    bet.sequence_start === bet.sequence_end
-                                      ? bet.sequence_start
-                                      : `${bet.sequence_start}-${bet.sequence_end}`
+                            {(historyExpanded ? historyPeriods : historyPeriods.slice(0, 1)).map((period) => (
+                              <tr key={period.id} className="hover:bg-gray-50">
+                                <td className="px-2 sm:px-4 py-2 font-medium">{period.period_number}</td>
+                                <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                                  {period.actual_draw_date
+                                    ? new Date(period.actual_draw_date).toLocaleDateString('zh-CN')
+                                    : '-'}
+                                </td>
+                                <td className="px-2 sm:px-4 py-2">
+                                  {period.winning_numbers && Array.isArray(period.winning_numbers) ? (
+                                    <div className="flex space-x-1">
+                                      {period.winning_numbers.slice(0, 6).map((num, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold"
+                                        >
+                                          {num}
+                                        </div>
+                                      ))}
+                                      {period.winning_numbers[6] && (
+                                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                                          {period.winning_numbers[6]}
+                                        </div>
+                                      )}
+                                    </div>
                                   ) : (
-                                    <span className="text-gray-400">-</span>
+                                    '-'
                                   )}
                                 </td>
-                                <td className="px-2 sm:px-4 py-2">{bet.user?.name || '未知用户'}</td>
-                                <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
-                                  {new Date(bet.created_at).toLocaleString('zh-CN', {
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
+                                <td className="px-2 sm:px-4 py-2 text-green-600 font-medium whitespace-nowrap">
+                                  ¥{Number(period.total_amount || 0).toLocaleString()}
                                 </td>
-                                <td className="px-2 sm:px-4 py-2 text-green-600 font-medium">
-                                  ¥{Number(bet.bet_amount).toLocaleString()}
+                                <td className="px-2 sm:px-4 py-2 font-bold text-blue-600">
+                                  {period.winning_sequence_number || '-'}
+                                </td>
+                                <td className="px-2 sm:px-4 py-2 text-orange-600 font-bold whitespace-nowrap">
+                                  ¥{Number(period.prize_amount || 0).toLocaleString()}
+                                </td>
+                                <td className="px-2 sm:px-4 py-2">
+                                  <button
+                                    onClick={() => handleViewDetail(period)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                  >
+                                    <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -508,115 +575,16 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                         </table>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-          </div>
-        )}
-
-        <div
-          ref={historyRef}
-          className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 flex-1"
-          style={{
-            minHeight: historyExpanded ? '200px' : '120px',
-            maxHeight: historyExpanded ? '45vh' : '120px'
-          }}
-        >
-          <div
-            className="p-4 sm:p-6 cursor-pointer"
-            onClick={() => setHistoryExpanded(!historyExpanded)}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">历史开奖记录</h3>
-              {historyExpanded ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
-              )}
-            </div>
-          </div>
-
-          {historyPeriods.length === 0 ? (
-            <div className="px-4 sm:px-6 pb-4 text-center py-6 text-gray-500 text-sm">暂无历史开奖记录</div>
-          ) : (
-            <div className="px-4 sm:px-6 pb-4 overflow-y-auto" style={{ maxHeight: historyExpanded ? 'calc(45vh - 80px)' : 'calc(120px - 80px)' }}>
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs sm:text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">期号</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">开奖日期</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">开奖号码</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">总销售额</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">中奖序号</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">奖金</th>
-                        <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">详情</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {(historyExpanded ? historyPeriods : historyPeriods.slice(0, 1)).map((period) => (
-                        <tr key={period.id} className="hover:bg-gray-50">
-                          <td className="px-2 sm:px-4 py-2 font-medium">{period.period_number}</td>
-                          <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
-                            {period.actual_draw_date
-                              ? new Date(period.actual_draw_date).toLocaleDateString('zh-CN')
-                              : '-'}
-                          </td>
-                          <td className="px-2 sm:px-4 py-2">
-                            {period.winning_numbers && Array.isArray(period.winning_numbers) ? (
-                              <div className="flex space-x-1">
-                                {period.winning_numbers.slice(0, 6).map((num, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold"
-                                  >
-                                    {num}
-                                  </div>
-                                ))}
-                                {period.winning_numbers[6] && (
-                                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                                    {period.winning_numbers[6]}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
-                          <td className="px-2 sm:px-4 py-2 text-green-600 font-medium whitespace-nowrap">
-                            ¥{Number(period.total_amount || 0).toLocaleString()}
-                          </td>
-                          <td className="px-2 sm:px-4 py-2 font-bold text-blue-600">
-                            {period.winning_sequence_number || '-'}
-                          </td>
-                          <td className="px-2 sm:px-4 py-2 text-orange-600 font-bold whitespace-nowrap">
-                            ¥{Number(period.prize_amount || 0).toLocaleString()}
-                          </td>
-                          <td className="px-2 sm:px-4 py-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDetail(period);
-                              }}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  </div>
                   {!historyExpanded && historyPeriods.length > 1 && (
-                    <div className="bg-gray-50 px-4 py-2 text-center text-xs text-gray-500">
+                    <div className="mt-2 text-center text-xs text-gray-500">
                       还有 {historyPeriods.length - 1} 条记录，点击展开查看
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
