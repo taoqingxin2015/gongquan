@@ -66,6 +66,30 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   const historyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+
+      const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
+
+      if (scrollPercentage < 0.2) {
+        setRulesExpanded(true);
+        setHistoryExpanded(false);
+      } else if (scrollPercentage > 0.5) {
+        setRulesExpanded(false);
+        setHistoryExpanded(true);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     fetchData();
 
     const betsChannel = supabase
@@ -342,9 +366,21 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                       className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       {currentBetsExpanded ? (
-                        <ChevronUp className="h-5 w-5 text-gray-500 animate-bounce" />
+                        rulesExpanded ? (
+                          <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                        ) : historyExpanded ? (
+                          <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
+                        ) : (
+                          <ChevronUp className="h-5 w-5 text-gray-500" />
+                        )
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                        rulesExpanded ? (
+                          <ChevronsDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                        ) : historyExpanded ? (
+                          <ChevronsUp className="h-5 w-5 text-blue-500 animate-bounce" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-blue-500 animate-bounce" />
+                        )
                       )}
                     </button>
                   </div>
