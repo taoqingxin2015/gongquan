@@ -111,16 +111,6 @@ export const LotteryBetConfirmationTab: React.FC = () => {
       const sequenceStart = maxSequenceEnd + 1;
       const sequenceEnd = maxSequenceEnd + betCount;
 
-      const { data: betData, error: betError } = await supabase
-        .from('lottery_bets')
-        .select('bet_amount')
-        .eq('id', betId)
-        .single();
-
-      if (betError) {
-        throw betError;
-      }
-
       const { error: updateBetError } = await supabase
         .from('lottery_bets')
         .update({
@@ -134,31 +124,6 @@ export const LotteryBetConfirmationTab: React.FC = () => {
 
       if (updateBetError) {
         throw updateBetError;
-      }
-
-      const { data: periodData, error: periodError } = await supabase
-        .from('lottery_periods')
-        .select('total_bets, total_amount')
-        .eq('id', periodId)
-        .single();
-
-      if (periodError) {
-        throw periodError;
-      }
-
-      const newTotalBets = (periodData.total_bets || 0) + betCount;
-      const newTotalAmount = Number(periodData.total_amount || 0) + Number(betData.bet_amount);
-
-      const { error: updatePeriodError } = await supabase
-        .from('lottery_periods')
-        .update({
-          total_bets: newTotalBets,
-          total_amount: newTotalAmount,
-        })
-        .eq('id', periodId);
-
-      if (updatePeriodError) {
-        throw updatePeriodError;
       }
 
       alert('确认成功');
