@@ -185,7 +185,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
       .from('lottery_periods')
       .select('*')
       .eq('status', 'drawn')
-      .order('actual_draw_date', { ascending: false });
+      .order('period_number', { ascending: false });
 
     if (historyError) {
       console.error('Error fetching history:', historyError);
