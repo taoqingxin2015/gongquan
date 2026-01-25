@@ -236,8 +236,8 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="h-screen flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex-shrink-0 mb-4 sticky top-0 bg-white z-50 pb-2 border-b-2 border-gray-200">
+    <div className="min-h-screen flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="flex-shrink-0 mb-4 sticky top-16 bg-white z-40 pb-2 border-b-2 border-gray-200">
         <div className="flex items-center">
           <button
             onClick={onClose}
