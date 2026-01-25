@@ -50,9 +50,7 @@ function mapCategory(polymarketCategory) {
 }
 
 function getRandomBetAmount() {
-  const base = 1000000;
-  const variance = Math.floor(Math.random() * 2000) - 1000;
-  return base + variance;
+  return 0;
 }
 
 async function fetchPolymarketMarkets() {
