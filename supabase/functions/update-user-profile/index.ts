@@ -85,13 +85,19 @@ Deno.serve(async (req: Request) => {
     if (body.email) {
       const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(
         user.id,
-        { email: body.email }
+        {
+          email: body.email,
+          email_confirm: true
+        }
       );
 
       if (emailError) {
         console.error('Email update error:', emailError);
         return new Response(
-          JSON.stringify({ error: '邮箱更新失败: ' + emailError.message }),
+          JSON.stringify({
+            error: '邮箱更新失败: ' + emailError.message,
+            errorDetails: emailError
+          }),
           {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
