@@ -74,6 +74,18 @@ Deno.serve(async (req: Request) => {
 
     console.log("Attempting to delete user:", userId);
 
+    const { error: deleteProfileError } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (deleteProfileError) {
+      console.error("Delete profile error:", deleteProfileError);
+      throw new Error("删除用户资料失败: " + deleteProfileError.message);
+    }
+
+    console.log("Profile deleted, now deleting auth user");
+
     const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(
       userId
     );
