@@ -20,8 +20,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("服务配置错误");
+    }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -38,15 +42,25 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
-    if (authError || !user) {
-      throw new Error("未授权");
+    if (authError) {
+      console.error("Auth error:", authError);
+      throw new Error("认证失败: " + authError.message);
     }
 
-    const { data: adminProfile } = await supabaseAdmin
+    if (!user) {
+      throw new Error("用户未登录");
+    }
+
+    const { data: adminProfile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
+
+    if (profileError) {
+      console.error("Profile fetch error:", profileError);
+      throw new Error("获取用户信息失败: " + profileError.message);
+    }
 
     if (!adminProfile || adminProfile.role !== "admin") {
       throw new Error("需要管理员权限");
@@ -58,17 +72,23 @@ Deno.serve(async (req: Request) => {
       throw new Error("缺少用户ID");
     }
 
+    console.log("Attempting to delete user:", userId);
+
     const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(
       userId
     );
 
     if (deleteAuthError) {
-      throw deleteAuthError;
+      console.error("Delete auth error:", deleteAuthError);
+      throw new Error("删除认证账号失败: " + deleteAuthError.message);
     }
+
+    console.log("User deleted successfully:", userId);
 
     return new Response(
       JSON.stringify({ success: true, message: "用户已删除" }),
       {
+        status: 200,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
@@ -78,7 +98,7 @@ Deno.serve(async (req: Request) => {
   } catch (error: any) {
     console.error("Error deleting user:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "删除失败" }),
       {
         status: 400,
         headers: {
