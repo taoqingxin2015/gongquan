@@ -111,14 +111,38 @@ export const WitnessListTab: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除该见证人吗？')) return;
+    if (!confirm('确定要删除该见证人吗？此操作将同时删除认证账号，无法恢复！')) return;
 
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('未授权');
+        return;
+      }
 
-    if (error) {
-      alert('删除失败: ' + error.message);
-    } else {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: id }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '删除失败');
+      }
+
+      alert('删除成功');
       fetchWitnesses();
+    } catch (error: any) {
+      console.error('Error deleting witness:', error);
+      alert('删除失败: ' + error.message);
     }
   };
 

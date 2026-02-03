@@ -83,7 +83,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (currentSession?.user) {
             const profileData = await fetchProfile(currentSession.user.id);
-            setProfile(profileData);
+            if (!profileData) {
+              await supabase.auth.signOut();
+              setProfile(null);
+            } else {
+              setProfile(profileData);
+            }
           } else {
             setProfile(null);
           }
@@ -98,12 +103,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) return { error };
+
+      if (data.user) {
+        const profileData = await fetchProfile(data.user.id);
+        if (!profileData) {
+          await supabase.auth.signOut();
+          return { error: new Error('账号不存在或已被删除') };
+        }
+      }
 
       return { error: null };
     } catch (error) {
