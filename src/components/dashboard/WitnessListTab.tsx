@@ -44,7 +44,8 @@ export const WitnessListTab: React.FC = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'admin');
+      .eq('role', 'admin')
+      .is('deleted_at', null);
 
     if (!error && data) {
       setAdminWitnesses(data);
@@ -56,6 +57,7 @@ export const WitnessListTab: React.FC = () => {
       .from('profiles')
       .select('*')
       .eq('role', 'witness')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {

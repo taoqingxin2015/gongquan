@@ -35,7 +35,8 @@ export const PlayersListTab: React.FC = () => {
       .from('profiles')
       .select('*')
       .eq('referred_by', profile.id)
-      .eq('role', 'player');
+      .eq('role', 'player')
+      .is('deleted_at', null);
 
     if (error) {
       console.error('Error fetching players:', error);

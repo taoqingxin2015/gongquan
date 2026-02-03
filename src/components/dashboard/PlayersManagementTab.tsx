@@ -40,7 +40,8 @@ export const PlayersManagementTab: React.FC = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'witness');
+      .eq('role', 'witness')
+      .is('deleted_at', null);
 
     if (!error && data) {
       setWitnesses(data);
@@ -52,6 +53,7 @@ export const PlayersManagementTab: React.FC = () => {
       .from('profiles')
       .select('*')
       .eq('role', 'player')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -97,7 +99,7 @@ export const PlayersManagementTab: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除该玩家吗？此操作将同时删除认证账号，无法恢复！')) return;
+    if (!confirm('确定要删除该玩家吗？用户将无法登录，但其投注记录会被保留。')) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();

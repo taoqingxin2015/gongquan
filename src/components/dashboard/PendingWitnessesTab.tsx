@@ -17,6 +17,7 @@ export const PendingWitnessesTab: React.FC = () => {
       .select('*')
       .eq('referred_by', profile.id)
       .eq('role', 'witness')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {

@@ -72,19 +72,21 @@ Deno.serve(async (req: Request) => {
       throw new Error("缺少用户ID");
     }
 
-    console.log("Attempting to delete user:", userId);
+    console.log("Attempting to soft delete user:", userId);
 
-    const { error: deleteProfileError } = await supabaseAdmin
+    const { error: softDeleteError } = await supabaseAdmin
       .from("profiles")
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: user.id,
+        status: 'banned'
+      })
       .eq("id", userId);
 
-    if (deleteProfileError) {
-      console.error("Delete profile error:", deleteProfileError);
-      throw new Error("删除用户资料失败: " + deleteProfileError.message);
+    if (softDeleteError) {
+      console.error("Soft delete error:", softDeleteError);
+      throw new Error("删除用户失败: " + softDeleteError.message);
     }
-
-    console.log("Profile deleted, now deleting auth user");
 
     const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(
       userId
@@ -95,7 +97,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("删除认证账号失败: " + deleteAuthError.message);
     }
 
-    console.log("User deleted successfully:", userId);
+    console.log("User soft deleted successfully:", userId);
 
     return new Response(
       JSON.stringify({ success: true, message: "用户已删除" }),
