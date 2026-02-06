@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { X } from 'lucide-react';
+import { X, Plus, Minus } from 'lucide-react';
 
 interface LotteryPeriod {
   id: string;
@@ -22,7 +22,8 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
   onSuccess,
 }) => {
   const { profile } = useAuth();
-  const [betAmount, setBetAmount] = useState('');
+  const [blueBalls, setBlueBalls] = useState<number[]>([1]);
+  const [betCount, setBetCount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [witnessQrCode, setWitnessQrCode] = useState<string>('');
 
@@ -44,6 +45,33 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
     fetchWitnessQrCode();
   }, [profile]);
 
+  const handleAddBlueBall = () => {
+    if (blueBalls.length < 16) {
+      const nextNumber = Math.max(...blueBalls, 0) + 1;
+      const newNumber = nextNumber <= 16 ? nextNumber : 1;
+      setBlueBalls([...blueBalls, newNumber]);
+    }
+  };
+
+  const handleRemoveBlueBall = () => {
+    if (blueBalls.length > 1) {
+      setBlueBalls(blueBalls.slice(0, -1));
+    }
+  };
+
+  const handleBlueBallChange = (index: number, value: string) => {
+    const num = parseInt(value);
+    if (!isNaN(num) && num >= 1 && num <= 16) {
+      const newBlueBalls = [...blueBalls];
+      newBlueBalls[index] = num;
+      setBlueBalls(newBlueBalls);
+    } else if (value === '') {
+      const newBlueBalls = [...blueBalls];
+      newBlueBalls[index] = 1;
+      setBlueBalls(newBlueBalls);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -52,9 +80,14 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
       return;
     }
 
-    const amount = Number(betAmount);
-    if (isNaN(amount) || amount <= 0 || amount % 2 !== 0) {
-      alert('投注金额必须是2的倍数');
+    const count = Number(betCount);
+    if (isNaN(count) || count <= 0) {
+      alert('请输入有效的注数');
+      return;
+    }
+
+    if (count < blueBalls.length) {
+      alert(`注数必须大于或等于蓝球数量（${blueBalls.length}个）`);
       return;
     }
 
@@ -78,7 +111,7 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
         return;
       }
 
-      const betCount = amount / 2;
+      const amount = count * 2;
 
       const { error } = await supabase.from('lottery_bets').insert([
         {
@@ -86,7 +119,8 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
           user_id: profile.id,
           witness_id: witnessData.id,
           bet_amount: amount,
-          bet_count: betCount,
+          bet_count: count,
+          blue_balls: blueBalls,
           status: 'pending',
         },
       ]);
@@ -105,8 +139,8 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
     }
   };
 
-  const betCount = betAmount ? Math.floor(Number(betAmount) / 2) : 0;
-  const isValidAmount = betAmount && Number(betAmount) > 0 && Number(betAmount) % 2 === 0;
+  const totalAmount = betCount ? Number(betCount) * 2 : 0;
+  const isValidBet = betCount && Number(betCount) >= blueBalls.length && Number(betCount) > 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -155,32 +189,75 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              请选择蓝球：
+            </label>
+            <div className="flex items-center space-x-2 flex-wrap gap-2">
+              {blueBalls.map((ball, index) => (
+                <input
+                  key={index}
+                  type="number"
+                  min="1"
+                  max="16"
+                  value={ball}
+                  onChange={(e) => handleBlueBallChange(index, e.target.value)}
+                  className="w-12 h-12 text-center rounded-full border-2 border-blue-500 bg-blue-500 text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              ))}
+              {blueBalls.length < 16 && (
+                <button
+                  type="button"
+                  onClick={handleAddBlueBall}
+                  className="w-10 h-10 rounded-full bg-green-500 text-white hover:bg-green-600 flex items-center justify-center transition-colors"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              )}
+              {blueBalls.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleRemoveBlueBall}
+                  className="w-10 h-10 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center transition-colors"
+                >
+                  <Minus className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              已选择 {blueBalls.length} 个蓝球（1-16之间的数字）
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              投注金额（元）
+              请输入注数：
             </label>
             <input
               type="number"
-              value={betAmount}
-              onChange={(e) => setBetAmount(e.target.value)}
-              placeholder="请输入2的倍数"
-              step="2"
-              min="2"
+              value={betCount}
+              onChange={(e) => setBetCount(e.target.value)}
+              placeholder={`至少 ${blueBalls.length} 注`}
+              min={blueBalls.length}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {betAmount && (
-              <div className="mt-2 text-sm">
-                {isValidAmount ? (
-                  <span className="text-green-600">
-                    将获得 {betCount} 注
-                  </span>
-                ) : (
-                  <span className="text-red-600">
-                    投注金额必须是2的倍数
-                  </span>
-                )}
+            {betCount && Number(betCount) < blueBalls.length && (
+              <div className="mt-2 text-sm text-red-600">
+                注数必须大于或等于蓝球数量（{blueBalls.length}个）
               </div>
             )}
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">投注金额：</span>
+              <span className="text-2xl font-bold text-green-600">
+                ¥{totalAmount.toLocaleString()}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              = {betCount || 0} 注 × ¥2/注
+            </div>
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -192,7 +269,7 @@ export const LotteryBetModal: React.FC<LotteryBetModalProps> = ({
           <div className="flex space-x-3 pt-4">
             <button
               type="submit"
-              disabled={submitting || !isValidAmount}
+              disabled={submitting || !isValidBet}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? '提交中...' : '已转款'}

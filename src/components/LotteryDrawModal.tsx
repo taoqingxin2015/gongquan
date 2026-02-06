@@ -31,34 +31,43 @@ function hexToBinary(hex: string): string {
     .join('');
 }
 
-function binaryXor(binary: string): string {
-  const mid = Math.floor(binary.length / 2);
-  const left = binary.slice(0, mid);
-  const right = binary.slice(mid);
-
-  let result = '';
-  for (let i = 0; i < left.length; i++) {
-    result += left[i] === right[i] ? '0' : '1';
-  }
-  return result;
-}
-
 function calculateWinningNumber(hash: string, totalBets: number): number {
   let binary = hexToBinary(hash);
 
-  while (true) {
-    const decimal = parseInt(binary, 2);
+  const bitsNeeded = Math.ceil(Math.log2(totalBets));
 
-    if (decimal >= 1 && decimal <= totalBets) {
-      return decimal;
+  while (binary.length > bitsNeeded) {
+    const truncateLength = bitsNeeded;
+    const left = binary.slice(0, binary.length - truncateLength);
+    const right = binary.slice(binary.length - truncateLength);
+
+    let result = '';
+    for (let i = 0; i < right.length; i++) {
+      const leftBit = i < left.length ? left[i] : '0';
+      result += leftBit === right[i] ? '0' : '1';
     }
 
-    if (binary.length <= 1) {
-      return (decimal % totalBets) + 1;
-    }
-
-    binary = binaryXor(binary);
+    binary = result;
   }
+
+  let decimal = parseInt(binary, 2);
+
+  if (decimal >= 1 && decimal <= totalBets) {
+    return decimal;
+  }
+
+  let inverted = '';
+  for (let i = 0; i < binary.length; i++) {
+    inverted += binary[i] === '0' ? '1' : '0';
+  }
+
+  decimal = (parseInt(inverted, 2) + 1) % (totalBets + 1);
+
+  if (decimal === 0) {
+    decimal = 1;
+  }
+
+  return decimal;
 }
 
 export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
@@ -121,7 +130,43 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
     setCalculating(true);
 
     try {
-      const prizeAmount = period.total_amount * 0.8;
+      const { data: periodData, error: periodError } = await supabase
+        .from('lottery_periods')
+        .select('pool_amount')
+        .eq('id', period.id)
+        .maybeSingle();
+
+      if (periodError) throw periodError;
+
+      const currentPoolAmount = Number(periodData?.pool_amount || 0);
+
+      const { data: winningBet, error: betError } = await supabase
+        .from('lottery_bets')
+        .select('blue_balls')
+        .eq('period_id', period.id)
+        .eq('status', 'confirmed')
+        .lte('sequence_start', result.winningNumber)
+        .gte('sequence_end', result.winningNumber)
+        .maybeSingle();
+
+      if (betError) {
+        console.error('Error fetching winning bet:', betError);
+      }
+
+      const blueBall = Number(numbers[6]);
+      const winnerBlueBalls = winningBet?.blue_balls as number[] || [];
+      const matchedBlue = winnerBlueBalls.includes(blueBall);
+
+      let prizeAmount: number;
+      let newPoolAmount: number;
+
+      if (matchedBlue) {
+        prizeAmount = period.total_amount * 0.8 + currentPoolAmount;
+        newPoolAmount = 0;
+      } else {
+        prizeAmount = period.total_amount * 0.6;
+        newPoolAmount = currentPoolAmount + period.total_amount * 0.2;
+      }
 
       const { error: updateError } = await supabase
         .from('lottery_periods')
@@ -131,6 +176,7 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
           winning_numbers: numbers.map(Number),
           winning_sequence_number: result.winningNumber,
           prize_amount: prizeAmount,
+          winner_matched_blue: matchedBlue,
         })
         .eq('id', period.id);
 
@@ -149,6 +195,7 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
             period_number: nextPeriodNumber,
             expected_draw_date: nextDrawDate.toISOString().split('T')[0],
             status: 'accepting_bets',
+            pool_amount: newPoolAmount,
           },
         ]);
 
@@ -156,7 +203,8 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
         console.error('Error creating next period:', createError);
       }
 
-      alert(`开奖成功！中奖序号：${result.winningNumber}`);
+      const matchInfo = matchedBlue ? '（匹配蓝球！）' : '';
+      alert(`开奖成功！中奖序号：${result.winningNumber}${matchInfo}\n奖金：¥${prizeAmount.toLocaleString()}`);
       onSuccess();
     } catch (error: any) {
       console.error('Error confirming draw:', error);
@@ -191,17 +239,13 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
                 <span className="text-gray-600">总注数：</span>
                 <span className="font-semibold text-blue-600">{period.total_bets}</span>
               </div>
-              <div>
-                <span className="text-gray-600">奖金（80%）：</span>
-                <span className="font-semibold text-orange-600">
-                  ¥{(period.total_amount * 0.8).toLocaleString()}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">见证费（20%）：</span>
-                <span className="font-semibold text-gray-600">
-                  ¥{(period.total_amount * 0.2).toLocaleString()}
-                </span>
+              <div className="col-span-2">
+                <div className="text-gray-600 mb-1">奖金分配：</div>
+                <div className="text-xs space-y-1 bg-white p-2 rounded">
+                  <div>• 仅中序号：60%奖金 (¥{(period.total_amount * 0.6).toLocaleString()})</div>
+                  <div className="ml-6">20%进入奖池，20%见证费</div>
+                  <div>• 序号+蓝球：80%奖金+奖池</div>
+                </div>
               </div>
             </div>
           </div>
@@ -272,7 +316,8 @@ export const LotteryDrawModal: React.FC<LotteryDrawModalProps> = ({
               <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
                 <p className="text-sm text-yellow-800">
                   <strong>算法说明：</strong>
-                  对开奖号码进行SHA-256哈希运算，然后循环截半异或，直到结果落入1-{period.total_bets}范围内。
+                  对开奖号码进行SHA-256哈希运算得到256位二进制，然后做循环截短异或运算（截短位数由总注数{period.total_bets}的二进制位数决定）。
+                  如果结果落在1-{period.total_bets}范围内即为中奖序号，否则逐位取反+1作为中奖序号。
                 </p>
               </div>
             </div>

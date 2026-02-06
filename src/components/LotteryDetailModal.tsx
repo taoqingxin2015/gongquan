@@ -118,12 +118,12 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                       key={idx}
                       className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-bold shadow-md"
                     >
-                      {num}
+                      {String(num).padStart(2, '0')}
                     </div>
                   ))}
                   {period.winning_numbers[6] && (
                     <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-md">
-                      {period.winning_numbers[6]}
+                      {String(period.winning_numbers[6]).padStart(2, '0')}
                     </div>
                   )}
                 </div>
@@ -199,10 +199,13 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                         注数序号
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
+                        蓝球号码
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
                         投注人
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
-                        投注时间
+                        投注确认时间
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
                         投注金额
@@ -221,6 +224,18 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                         bet.sequence_start <= period.winning_sequence_number &&
                         bet.sequence_end >= period.winning_sequence_number;
 
+                      const blueBalls = (bet.blue_balls as any) || [];
+                      const blueBallsDisplay = Array.isArray(blueBalls) && blueBalls.length > 0
+                        ? (blueBalls.length === 1
+                            ? blueBalls[0].toString()
+                            : blueBalls.every((ball: number, idx: number, arr: number[]) =>
+                                idx === 0 || ball === arr[idx - 1] + 1
+                              )
+                              ? `${blueBalls[0]}-${blueBalls[blueBalls.length - 1]}`
+                              : blueBalls.join(',')
+                          )
+                        : '-';
+
                       return (
                         <tr
                           key={bet.id}
@@ -238,11 +253,16 @@ export const LotteryDetailModal: React.FC<LotteryDetailModalProps> = ({ period, 
                               <span className="text-gray-400">-</span>
                             )}
                           </td>
+                          <td className="px-4 py-2 text-sm text-blue-600 font-medium">
+                            {blueBallsDisplay}
+                          </td>
                           <td className="px-4 py-2 text-sm">
                             {bet.user?.name || '未知用户'}
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            {new Date(bet.created_at).toLocaleString('zh-CN')}
+                            {bet.confirmed_at
+                              ? new Date(bet.confirmed_at).toLocaleString('zh-CN')
+                              : '-'}
                           </td>
                           <td className="px-4 py-2 text-sm text-green-600 font-medium">
                             ¥{Number(bet.bet_amount).toLocaleString()}

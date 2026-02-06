@@ -316,18 +316,24 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                 <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>
                   <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mb-4">
                     <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
-                      <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
+                      <p><strong>投注规则：</strong>每注2元，注数不限。系统会根据下注被确认时间先后给每注分配一个顺序号（1～N）。多注则连续分配，并在见证人确认后公布在本页面下端。</p>
 
                       <p><strong>开奖规则：</strong>系统开奖与福彩双色球开奖同步，结果由第三方公信力机构决定，网站无法造假。</p>
 
                       <p><strong>中奖算法：</strong></p>
                       <ol className="list-decimal list-inside space-y-1 ml-4">
                         <li>对福彩开奖号码（7个号码按出球顺序连接）做SHA-256哈希运算，得到256比特结果</li>
-                        <li>用该结果循环截半做异或运算，直到其换算的十进制数首次落入此次开奖总注数范围（1～N）内停止</li>
-                        <li>该结果即为中奖顺序号</li>
+                        <li>用该结果做循环截短异或运算（从最右边截短，截短位数由当期总注数换算成的二进制位数决定）</li>
+                        <li>最后的结果换算成十进制如果落在1～N的范围之内即为中奖顺序号，否则逐位取反+1作为中奖顺序号</li>
                       </ol>
 
-                      <p><strong>奖金分配：</strong>中奖者获得本期总投注额的80%。例如总投注额为2万元，则奖金为1.6万元。剩余20%为各级相关见证人见证服务费。</p>
+                      <p><strong>奖金分配：</strong></p>
+                      <ol className="list-decimal list-inside space-y-1 ml-4">
+                        <li>如只是被摇中顺序号，则获得该期总投注额的60%，剩下的20%进入下一期奖池，20%为各级相关见证人见证服务费。</li>
+                        <li>如同时猜中蓝色球和被摇中顺序号，则获得该期总投注额的80%加奖池所有奖金。</li>
+                      </ol>
+
+                      <p><strong>举例：</strong>例如当期总投注额为2万元，奖池为1万元，如只被摇中顺序号，则中奖者奖金为1.2万元，0.4万元进入下一期奖池（下一期奖池变为1.4万元），0.4万元为各级相关见证人见证服务费。如同时猜中蓝色球和被摇中顺序号，则奖金为1.6万+1万=2.6万元，0.4万元为各级相关见证人见证服务费。</p>
 
                       <p className="text-green-700 font-medium">此规则保证每期必有幸运儿中奖，中奖者由公开数学算法决定，结果公平公正！</p>
                     </div>
@@ -421,7 +427,7 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <div>
                       <div className="text-xs text-gray-600 mb-1">期号</div>
                       {isEditingPeriod ? (
@@ -455,6 +461,10 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                       <div className="text-sm sm:text-base font-semibold text-green-600">¥{totalBetAmount.toLocaleString()}</div>
                     </div>
                     <div>
+                      <div className="text-xs text-gray-600 mb-1">奖池累积额</div>
+                      <div className="text-sm sm:text-base font-semibold text-orange-600">¥{Number(currentPeriod.pool_amount || 0).toLocaleString()}</div>
+                    </div>
+                    <div>
                       <div className="text-xs text-gray-600 mb-1">投注人数</div>
                       <div className="text-sm sm:text-base font-semibold text-blue-600">{totalBetCount}人</div>
                     </div>
@@ -475,38 +485,56 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                                 <tr>
                                   <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">序号</th>
                                   <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">注数序号</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">蓝球号码</th>
                                   <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注人</th>
-                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注时间</th>
+                                  <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注确认时间</th>
                                   <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-700">投注金额</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-200">
-                                {currentBets.map((bet, index) => (
-                                  <tr key={bet.id} className="hover:bg-gray-50">
-                                    <td className="px-2 sm:px-4 py-2">{index + 1}</td>
-                                    <td className="px-2 sm:px-4 py-2 font-medium text-blue-600">
-                                      {bet.sequence_start && bet.sequence_end ? (
-                                        bet.sequence_start === bet.sequence_end
-                                          ? bet.sequence_start
-                                          : `${bet.sequence_start}-${bet.sequence_end}`
-                                      ) : (
-                                        <span className="text-gray-400">-</span>
-                                      )}
-                                    </td>
-                                    <td className="px-2 sm:px-4 py-2">{bet.user?.name || '未知用户'}</td>
-                                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
-                                      {new Date(bet.created_at).toLocaleString('zh-CN', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </td>
-                                    <td className="px-2 sm:px-4 py-2 text-green-600 font-medium">
-                                      ¥{Number(bet.bet_amount).toLocaleString()}
-                                    </td>
-                                  </tr>
-                                ))}
+                                {currentBets.map((bet, index) => {
+                                  const blueBalls = (bet.blue_balls as any) || [];
+                                  const blueBallsDisplay = Array.isArray(blueBalls) && blueBalls.length > 0
+                                    ? (blueBalls.length === 1
+                                        ? blueBalls[0].toString()
+                                        : blueBalls.every((ball: number, idx: number, arr: number[]) =>
+                                            idx === 0 || ball === arr[idx - 1] + 1
+                                          )
+                                          ? `${blueBalls[0]}-${blueBalls[blueBalls.length - 1]}`
+                                          : blueBalls.join(',')
+                                      )
+                                    : '-';
+
+                                  return (
+                                    <tr key={bet.id} className="hover:bg-gray-50">
+                                      <td className="px-2 sm:px-4 py-2">{index + 1}</td>
+                                      <td className="px-2 sm:px-4 py-2 font-medium text-blue-600">
+                                        {bet.sequence_start && bet.sequence_end ? (
+                                          bet.sequence_start === bet.sequence_end
+                                            ? bet.sequence_start
+                                            : `${bet.sequence_start}-${bet.sequence_end}`
+                                        ) : (
+                                          <span className="text-gray-400">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-2 sm:px-4 py-2 text-blue-600 font-medium">{blueBallsDisplay}</td>
+                                      <td className="px-2 sm:px-4 py-2">{bet.user?.name || '未知用户'}</td>
+                                      <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                                        {bet.confirmed_at
+                                          ? new Date(bet.confirmed_at).toLocaleString('zh-CN', {
+                                              month: '2-digit',
+                                              day: '2-digit',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })
+                                          : '-'}
+                                      </td>
+                                      <td className="px-2 sm:px-4 py-2 text-green-600 font-medium">
+                                        ¥{Number(bet.bet_amount).toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
@@ -585,12 +613,12 @@ export const LotteryPage: React.FC<LotteryPageProps> = ({ onClose }) => {
                                           key={idx}
                                           className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold"
                                         >
-                                          {num}
+                                          {String(num).padStart(2, '0')}
                                         </div>
                                       ))}
                                       {period.winning_numbers[6] && (
                                         <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                                          {period.winning_numbers[6]}
+                                          {String(period.winning_numbers[6]).padStart(2, '0')}
                                         </div>
                                       )}
                                     </div>
